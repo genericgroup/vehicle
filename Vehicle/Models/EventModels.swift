@@ -145,6 +145,11 @@ struct EventCategory: Hashable, Identifiable {
     )
     
     static let allCategories = [observation, repair, maintenance]
+    
+    /// Find a category by its ID
+    static func from(id: String) -> EventCategory {
+        allCategories.first { $0.id == id } ?? .observation
+    }
 }
 
 struct EventSubcategory: Hashable, Identifiable {
@@ -153,4 +158,14 @@ struct EventSubcategory: Hashable, Identifiable {
     let guidance: String
     
     var displayName: String { name }
+    
+    /// Find a subcategory by its ID across all categories
+    static func from(id: String) -> EventSubcategory {
+        for category in EventCategory.allCategories {
+            if let subcategory = category.subcategories.first(where: { $0.id == id }) {
+                return subcategory
+            }
+        }
+        return EventCategory.observation.subcategories[0]
+    }
 } 

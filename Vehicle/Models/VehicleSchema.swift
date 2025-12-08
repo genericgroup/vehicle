@@ -464,6 +464,103 @@ actor DataExportManager {
         
         return fileURL
     }
+    
+    /// Export all data to CSV format
+    func exportToCSV(vehicles: [Vehicle]) async throws -> URL {
+        var csvContent = "Vehicle ID,Make,Model,Year,Color,Nickname,Category,Subcategory,Type,VIN,Serial Number,Fuel Type,Engine Type,Drive Type,Transmission,Added Date\n"
+        
+        for vehicle in vehicles {
+            let row = [
+                vehicle.id,
+                escapeCSV(vehicle.make),
+                escapeCSV(vehicle.model),
+                String(vehicle.year),
+                escapeCSV(vehicle.color),
+                escapeCSV(vehicle.nickname ?? ""),
+                escapeCSV(vehicle.category.displayName),
+                escapeCSV(vehicle.subcategory?.displayName ?? ""),
+                escapeCSV(vehicle.vehicleType?.displayName ?? ""),
+                escapeCSV(vehicle.vin ?? ""),
+                escapeCSV(vehicle.serialNumber ?? ""),
+                escapeCSV(vehicle.fuelType.displayName),
+                escapeCSV(vehicle.engineType.displayName),
+                escapeCSV(vehicle.driveType.displayName),
+                escapeCSV(vehicle.transmissionType.displayName),
+                ISO8601DateFormatter().string(from: vehicle.addedDate)
+            ].joined(separator: ",")
+            csvContent += row + "\n"
+        }
+        
+        // Add events section
+        csvContent += "\n\nEvents\n"
+        csvContent += "Event ID,Vehicle ID,Category,Subcategory,Date,Details,Mileage,Distance Unit,Hours,Cost,Currency\n"
+        
+        for vehicle in vehicles {
+            for event in vehicle.events ?? [] {
+                let row = [
+                    event.id,
+                    vehicle.id,
+                    escapeCSV(event.category.displayName),
+                    escapeCSV(event.subcategory.displayName),
+                    ISO8601DateFormatter().string(from: event.date),
+                    escapeCSV(event.details ?? ""),
+                    event.mileage.map { "\($0)" } ?? "",
+                    event.distanceUnit,
+                    event.hours.map { "\($0)" } ?? "",
+                    event.cost.map { "\($0)" } ?? "",
+                    event.currencyCode
+                ].joined(separator: ",")
+                csvContent += row + "\n"
+            }
+        }
+        
+        // Add ownership records section
+        csvContent += "\n\nOwnership Records\n"
+        csvContent += "Record ID,Vehicle ID,Type,Date,Details,Mileage,Distance Unit,Hours,Cost,Currency\n"
+        
+        for vehicle in vehicles {
+            for record in vehicle.ownershipRecords ?? [] {
+                let row = [
+                    record.id,
+                    vehicle.id,
+                    escapeCSV(record.type.displayName),
+                    ISO8601DateFormatter().string(from: record.date),
+                    escapeCSV(record.details ?? ""),
+                    record.mileage.map { "\($0)" } ?? "",
+                    record.distanceUnit,
+                    record.hours.map { "\($0)" } ?? "",
+                    record.cost.map { "\($0)" } ?? "",
+                    record.currencyCode
+                ].joined(separator: ",")
+                csvContent += row + "\n"
+            }
+        }
+        
+        // Save to documents directory
+        guard let documentsDir = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first else {
+            throw NSError(domain: "DataExport", code: 1, userInfo: [NSLocalizedDescriptionKey: "Could not access documents directory"])
+        }
+        
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd_HHmmss"
+        let timestamp = dateFormatter.string(from: Date())
+        let fileName = "VehicleExport_\(timestamp).csv"
+        let fileURL = documentsDir.appendingPathComponent(fileName)
+        
+        try csvContent.write(to: fileURL, atomically: true, encoding: .utf8)
+        
+        logger.info("Exported CSV to: \(fileURL.path)", category: .database)
+        
+        return fileURL
+    }
+    
+    /// Escape a string for CSV format
+    private func escapeCSV(_ string: String) -> String {
+        if string.contains(",") || string.contains("\"") || string.contains("\n") {
+            return "\"\(string.replacingOccurrences(of: "\"", with: "\"\""))\""
+        }
+        return string
+    }
 }
 
 // MARK: - Migration Coordinator

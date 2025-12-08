@@ -198,17 +198,25 @@ struct EventValidation {
     static func validateDetails(_ details: String) -> ValidationResult {
         let trimmed = details.trimmingCharacters(in: .whitespaces)
         if trimmed.isEmpty {
-            return ValidationResult(isValid: false, message: "Details cannot be empty")
+            return ValidationResult(isValid: false, message: "Please describe what happened. Include relevant information like symptoms, parts involved, or work performed.")
+        }
+        if trimmed.count < 5 {
+            return ValidationResult(isValid: false, message: "Please provide more detail. A brief description helps track your vehicle's history.")
         }
         if trimmed.count > 2000 {
-            return ValidationResult(isValid: false, message: "Details cannot exceed 2000 characters")
+            return ValidationResult(isValid: false, message: "Details are too long (\(trimmed.count) characters). Please keep it under 2,000 characters.")
         }
         return ValidationResult(isValid: true, message: "")
     }
     
     static func validateDate(_ date: Date) -> ValidationResult {
         if date > Date() {
-            return ValidationResult(isValid: false, message: "Date cannot be in the future")
+            return ValidationResult(isValid: false, message: "The event date cannot be in the future. Please select today or an earlier date.")
+        }
+        // Check if date is unreasonably old (before 1900)
+        let calendar = Calendar.current
+        if calendar.component(.year, from: date) < 1900 {
+            return ValidationResult(isValid: false, message: "The date appears to be incorrect. Please select a valid date.")
         }
         return ValidationResult(isValid: true, message: "")
     }
@@ -216,16 +224,23 @@ struct EventValidation {
     static func validateMileage(_ mileage: String, previousMileage: Decimal?) -> ValidationResult {
         guard !mileage.isEmpty else { return ValidationResult(isValid: true, message: "") }
         
-        guard let mileageValue = Decimal(string: mileage.replacingOccurrences(of: ",", with: "")) else {
-            return ValidationResult(isValid: false, message: "Please enter a valid number for mileage")
+        // Remove common formatting characters
+        let cleanedMileage = mileage.replacingOccurrences(of: ",", with: "").replacingOccurrences(of: " ", with: "")
+        
+        guard let mileageValue = Decimal(string: cleanedMileage) else {
+            return ValidationResult(isValid: false, message: "Invalid mileage format. Please enter a number (e.g., 50000 or 50,000).")
         }
         
         if mileageValue < Decimal.zero {
-            return ValidationResult(isValid: false, message: "Mileage cannot be negative")
+            return ValidationResult(isValid: false, message: "Mileage cannot be negative. Please enter a positive number.")
+        }
+        
+        if mileageValue > Decimal(10_000_000) {
+            return ValidationResult(isValid: false, message: "Mileage of \(NumberFormatters.formatDecimal(mileageValue)) seems unusually high. Please verify the value.")
         }
         
         if let previous = previousMileage, mileageValue < previous {
-            return ValidationResult(isValid: false, message: "Mileage cannot be less than the previous recorded mileage (\(previous))")
+            return ValidationResult(isValid: false, message: "This mileage (\(NumberFormatters.formatDecimal(mileageValue))) is lower than a previous reading (\(NumberFormatters.formatDecimal(previous))). Mileage should increase over time unless the odometer was replaced.")
         }
         
         return ValidationResult(isValid: true, message: "")
@@ -234,16 +249,18 @@ struct EventValidation {
     static func validateHours(_ hours: String) -> ValidationResult {
         guard !hours.isEmpty else { return ValidationResult(isValid: true, message: "") }
         
-        guard let hoursValue = Decimal(string: hours.replacingOccurrences(of: ",", with: "")) else {
-            return ValidationResult(isValid: false, message: "Please enter a valid number for hours")
+        let cleanedHours = hours.replacingOccurrences(of: ",", with: "").replacingOccurrences(of: " ", with: "")
+        
+        guard let hoursValue = Decimal(string: cleanedHours) else {
+            return ValidationResult(isValid: false, message: "Invalid hours format. Please enter a number (e.g., 500 or 1,234.5).")
         }
         
         if hoursValue < Decimal.zero {
-            return ValidationResult(isValid: false, message: "Hours cannot be negative")
+            return ValidationResult(isValid: false, message: "Hours cannot be negative. Please enter a positive number.")
         }
         
-        if hoursValue > Decimal(1000000) {
-            return ValidationResult(isValid: false, message: "Hours value seems unreasonably high")
+        if hoursValue > Decimal(1_000_000) {
+            return ValidationResult(isValid: false, message: "Hours value of \(NumberFormatters.formatDecimal(hoursValue)) seems unusually high. Please verify the value.")
         }
         
         return ValidationResult(isValid: true, message: "")
@@ -252,19 +269,49 @@ struct EventValidation {
     static func validateCost(_ cost: String) -> ValidationResult {
         guard !cost.isEmpty else { return ValidationResult(isValid: true, message: "") }
         
-        guard let costValue = Decimal(string: cost.replacingOccurrences(of: ",", with: "")) else {
-            return ValidationResult(isValid: false, message: "Please enter a valid number for cost")
+        // Remove currency symbols and formatting
+        let cleanedCost = cost
+            .replacingOccurrences(of: ",", with: "")
+            .replacingOccurrences(of: "$", with: "")
+            .replacingOccurrences(of: "€", with: "")
+            .replacingOccurrences(of: "£", with: "")
+            .replacingOccurrences(of: " ", with: "")
+        
+        guard let costValue = Decimal(string: cleanedCost) else {
+            return ValidationResult(isValid: false, message: "Invalid cost format. Please enter a number (e.g., 150.00 or 1,500).")
         }
         
         if costValue < 0 {
-            return ValidationResult(isValid: false, message: "Cost cannot be negative")
+            return ValidationResult(isValid: false, message: "Cost cannot be negative. For refunds or credits, consider adding a note in the details.")
         }
         
-        if costValue > 1000000000 {
-            return ValidationResult(isValid: false, message: "Cost value seems unreasonably high")
+        if costValue > 1_000_000_000 {
+            return ValidationResult(isValid: false, message: "Cost of \(NumberFormatters.formatDecimal(costValue)) seems unusually high. Please verify the amount.")
         }
         
         return ValidationResult(isValid: true, message: "")
+    }
+    
+    /// Validate all metrics at once and return any validation errors
+    static func validateMetrics(mileage: String, hours: String, cost: String, previousMileage: Decimal? = nil) -> [ValidationResult] {
+        var errors: [ValidationResult] = []
+        
+        let mileageResult = validateMileage(mileage, previousMileage: previousMileage)
+        if !mileageResult.isValid {
+            errors.append(mileageResult)
+        }
+        
+        let hoursResult = validateHours(hours)
+        if !hoursResult.isValid {
+            errors.append(hoursResult)
+        }
+        
+        let costResult = validateCost(cost)
+        if !costResult.isValid {
+            errors.append(costResult)
+        }
+        
+        return errors
     }
 }
 
@@ -273,22 +320,29 @@ struct OwnershipValidation {
     static func validateDetails(_ details: String, type: OwnershipEventType) -> ValidationResult {
         let trimmed = details.trimmingCharacters(in: .whitespaces)
         if trimmed.isEmpty {
-            return ValidationResult(isValid: false, message: "Details cannot be empty")
+            // Provide type-specific guidance
+            let guidance: String
+            switch type {
+            case .purchased:
+                guidance = "Please describe the purchase. Include details like seller name, condition, or any included items."
+            case .sold:
+                guidance = "Please describe the sale. Include details like buyer information, final price, or sale conditions."
+            case .registered:
+                guidance = "Please describe the registration. Include details like registration number, state/country, or expiration date."
+            case .insured:
+                guidance = "Please describe the insurance. Include details like policy number, coverage type, or provider name."
+            case .leased:
+                guidance = "Please describe the lease. Include details like lease terms, monthly payment, or lessor information."
+            default:
+                guidance = "Please provide details about this ownership record."
+            }
+            return ValidationResult(isValid: false, message: guidance)
+        }
+        if trimmed.count < 5 {
+            return ValidationResult(isValid: false, message: "Please provide more detail. A brief description helps track your vehicle's ownership history.")
         }
         if trimmed.count > 2000 {
-            return ValidationResult(isValid: false, message: "Details cannot exceed 2000 characters")
-        }
-        
-        // Type-specific validations
-        switch type {
-        case .sold:
-            // Removed sold details validation requirement
-            break
-        case .purchased:
-            // Removed purchase details validation requirement
-            break
-        default:
-            break
+            return ValidationResult(isValid: false, message: "Details are too long (\(trimmed.count) characters). Please keep it under 2,000 characters.")
         }
         
         return ValidationResult(isValid: true, message: "")
@@ -296,7 +350,12 @@ struct OwnershipValidation {
     
     static func validateDate(_ date: Date) -> ValidationResult {
         if date > Date() {
-            return ValidationResult(isValid: false, message: "Date cannot be in the future")
+            return ValidationResult(isValid: false, message: "The record date cannot be in the future. Please select today or an earlier date.")
+        }
+        // Check if date is unreasonably old (before 1900)
+        let calendar = Calendar.current
+        if calendar.component(.year, from: date) < 1900 {
+            return ValidationResult(isValid: false, message: "The date appears to be incorrect. Please select a valid date.")
         }
         return ValidationResult(isValid: true, message: "")
     }

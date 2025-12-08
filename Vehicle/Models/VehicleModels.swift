@@ -826,28 +826,17 @@ final class Event {
     var formattedMileage: String? {
         guard let mileage = mileage else { return nil }
         let unit = DistanceUnit(rawValue: distanceUnit) ?? .miles
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .decimal
-        formatter.groupingSeparator = ","
-        formatter.groupingSize = 3
-        return (formatter.string(from: NSDecimalNumber(decimal: mileage)) ?? "\(mileage)") + " \(unit.rawValue)"
+        return NumberFormatters.formatMileage(mileage, unit: unit)
     }
     
     var formattedHours: String? {
         guard let hours = hours else { return nil }
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .decimal
-        formatter.groupingSeparator = ","
-        formatter.groupingSize = 3
-        return (formatter.string(from: NSDecimalNumber(decimal: hours)) ?? "\(hours)") + " hrs"
+        return NumberFormatters.formatHours(hours)
     }
     
     var formattedCost: String? {
         guard let cost = cost else { return nil }
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
-        formatter.currencyCode = currencyCode
-        return formatter.string(from: NSDecimalNumber(decimal: cost))
+        return NumberFormatters.formatCurrency(cost, currencyCode: currencyCode)
     }
     
     init(
@@ -901,28 +890,17 @@ final class OwnershipRecord {
     var formattedMileage: String? {
         guard let mileage = mileage else { return nil }
         let unit = DistanceUnit(rawValue: distanceUnit) ?? .miles
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .decimal
-        formatter.groupingSeparator = ","
-        formatter.groupingSize = 3
-        return (formatter.string(from: NSDecimalNumber(decimal: mileage)) ?? "\(mileage)") + " \(unit.rawValue)"
+        return NumberFormatters.formatMileage(mileage, unit: unit)
     }
     
     var formattedHours: String? {
         guard let hours = hours else { return nil }
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .decimal
-        formatter.groupingSeparator = ","
-        formatter.groupingSize = 3
-        return (formatter.string(from: NSDecimalNumber(decimal: hours)) ?? "\(hours)") + " hrs"
+        return NumberFormatters.formatHours(hours)
     }
     
     var formattedCost: String? {
         guard let cost = cost else { return nil }
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
-        formatter.currencyCode = currencyCode
-        return formatter.string(from: NSDecimalNumber(decimal: cost))
+        return NumberFormatters.formatCurrency(cost, currencyCode: currencyCode)
     }
     
     init(

@@ -55,7 +55,8 @@ struct SettingsView: View {
                     isExporting: $isExporting,
                     showingBackupConfirmation: $showingBackupConfirmation,
                     isCreatingBackup: $isCreatingBackup,
-                    onExport: exportData,
+                    onExportJSON: exportDataJSON,
+                    onExportCSV: exportDataCSV,
                     onBackup: createBackup
                 )
                 
@@ -136,7 +137,7 @@ struct SettingsView: View {
         }
     }
     
-    private func exportData() {
+    private func exportDataJSON() {
         isExporting = true
         Task {
             do {
@@ -154,7 +155,30 @@ struct SettingsView: View {
                     isExporting = false
                     HapticManager.standardError()
                 }
-                logger.error("Export failed: \(error.localizedDescription)", category: .database)
+                logger.error("JSON export failed: \(error.localizedDescription)", category: .database)
+            }
+        }
+    }
+    
+    private func exportDataCSV() {
+        isExporting = true
+        Task {
+            do {
+                let url = try await DataExportManager.shared.exportToCSV(vehicles: vehicles)
+                await MainActor.run {
+                    exportURL = url
+                    showingExportSheet = true
+                    isExporting = false
+                    HapticManager.standardSuccess()
+                }
+            } catch {
+                await MainActor.run {
+                    errorMessage = "Failed to export CSV: \(error.localizedDescription)"
+                    showingError = true
+                    isExporting = false
+                    HapticManager.standardError()
+                }
+                logger.error("CSV export failed: \(error.localizedDescription)", category: .database)
             }
         }
     }
@@ -256,7 +280,8 @@ private struct DataSection: View {
     @Binding var isExporting: Bool
     @Binding var showingBackupConfirmation: Bool
     @Binding var isCreatingBackup: Bool
-    let onExport: () -> Void
+    let onExportJSON: () -> Void
+    let onExportCSV: () -> Void
     let onBackup: () -> Void
     
     var body: some View {
@@ -290,10 +315,23 @@ private struct DataSection: View {
             }
             
             Button {
-                onExport()
+                onExportJSON()
             } label: {
                 HStack {
-                    Label("Export Data", systemImage: "square.and.arrow.up")
+                    Label("Export as JSON", systemImage: "doc.badge.arrow.up")
+                    if isExporting {
+                        Spacer()
+                        ProgressView()
+                    }
+                }
+            }
+            .disabled(isExporting || vehicles.isEmpty)
+            
+            Button {
+                onExportCSV()
+            } label: {
+                HStack {
+                    Label("Export as CSV", systemImage: "tablecells.badge.ellipsis")
                     if isExporting {
                         Spacer()
                         ProgressView()
@@ -323,7 +361,7 @@ private struct DataSection: View {
         } header: {
             Text("DATA")
         } footer: {
-            Text("Export creates a JSON file you can share or save. Backup creates a local copy of your database.")
+            Text("Export creates a file you can share or save. JSON preserves all data structure, CSV is spreadsheet-compatible. Backup creates a local copy of your database.")
         }
     }
 }

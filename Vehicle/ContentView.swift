@@ -15,10 +15,11 @@ struct ContentView: View {
     @StateObject private var viewModel = ContentViewModel()
     @State private var searchText = ""
     @State private var selectedVehicle: Vehicle?
-    @State private var _cachedSortedVehicles: [Vehicle]?
-    @State private var _lastSortOption: VehicleSortOption?
     @State private var _lastSearchResults: [SearchResultItem]?
     @State private var hasInitialized = false
+    /// Cache key combining vehicles count, sort option, and pinned state to detect changes
+    @State private var _sortCacheKey: String = ""
+    @State private var _cachedSortedVehicles: [Vehicle] = []
     
     @AppStorage(AppStorageKeys.vehicleSortOption) private var sortOption = VehicleSortOption.none.rawValue
     @AppStorage(AppStorageKeys.vehicleGroupOption) private var groupOption = VehicleGroupOption.none.rawValue
@@ -29,13 +30,21 @@ struct ContentView: View {
         VehicleGroupOption(rawValue: groupOption) ?? .none
     }
     
-    private var sortedVehicles: [Vehicle] {
+    /// Generate a cache key based on current state
+    private var currentSortCacheKey: String {
         let option = VehicleSortOption(rawValue: sortOption) ?? .none
-        
-        // Use cached results if available and sort option hasn't changed
-        if let cached = _cachedSortedVehicles, _lastSortOption == option {
-            return cached
+        let pinnedIds = vehicles.filter { $0.isPinned }.map { $0.id }.sorted().joined()
+        return "\(vehicles.count)-\(option.rawValue)-\(pinnedIds)"
+    }
+    
+    private var sortedVehicles: [Vehicle] {
+        // Check if cache is valid using the cache key
+        let cacheKey = currentSortCacheKey
+        if _sortCacheKey == cacheKey && !_cachedSortedVehicles.isEmpty {
+            return _cachedSortedVehicles
         }
+        
+        let option = VehicleSortOption(rawValue: sortOption) ?? .none
         
         // Calculate new sorted results
         let sorted = vehicles.sorted { v1, v2 in
@@ -65,26 +74,22 @@ struct ContentView: View {
             }
         }
         
-        // Update cache in the next run loop to avoid view update conflicts
-        Task { @MainActor in
-            _cachedSortedVehicles = sorted
-            _lastSortOption = option
-        }
-        
         return sorted
     }
     
-    private func updateSortCache(_ sorted: [Vehicle], option: VehicleSortOption) {
-        _cachedSortedVehicles = sorted
-        _lastSortOption = option
+    /// Update the sort cache - call this from onChange handlers
+    private func updateSortCache() {
+        let cacheKey = currentSortCacheKey
+        if _sortCacheKey != cacheKey {
+            _sortCacheKey = cacheKey
+            _cachedSortedVehicles = sortedVehicles
+        }
     }
     
     private func clearCaches() {
-        Task { @MainActor in
-            _cachedSortedVehicles = nil
-            _lastSortOption = nil
-            _lastSearchResults = nil
-        }
+        _sortCacheKey = ""
+        _cachedSortedVehicles = []
+        _lastSearchResults = nil
     }
     
     private var filteredVehicles: [Vehicle] {
@@ -208,11 +213,28 @@ struct ContentView: View {
         )
     }
     
+    @StateObject private var undoCoordinator = UndoCoordinator.shared
+    
     var body: some View {
         NavigationSplitView {
             vehicleList()
         } detail: {
             VehicleDetailContainer(selectedVehicle: selectedVehicle)
+        }
+        .overlay(alignment: .bottom) {
+            if undoCoordinator.canUndoVehicleDelete {
+                UndoBanner(
+                    message: undoCoordinator.undoMessage ?? "Item deleted",
+                    onUndo: {
+                        _ = undoCoordinator.undoVehicleDeletion(in: modelContext)
+                    },
+                    onDismiss: {
+                        undoCoordinator.clearUndoState()
+                    }
+                )
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+                .animation(.spring(response: 0.3), value: undoCoordinator.canUndoVehicleDelete)
+            }
         }
         .sheet(isPresented: $viewModel.showingAddVehicle) {
             AddVehicleSheet(modelContext: modelContext)
@@ -245,10 +267,7 @@ struct ContentView: View {
             }
         }
         .onChange(of: sortOption) { _, _ in
-            Task { @MainActor in
-                _cachedSortedVehicles = nil
-                _lastSortOption = nil
-            }
+            clearCaches()
         }
         .onReceive(NotificationCenter.default.publisher(for: UIApplication.didReceiveMemoryWarningNotification)) { _ in
             Task { @MainActor in

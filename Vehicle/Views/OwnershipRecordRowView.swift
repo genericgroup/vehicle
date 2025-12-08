@@ -433,14 +433,7 @@ struct OwnershipRecordRowView: View {
     
     // MARK: - Helper Functions
     private func formatDecimalWithUnit(_ value: Decimal, unit: String) -> String {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .decimal
-        formatter.groupingSeparator = ","
-        formatter.groupingSize = 3
-        formatter.maximumFractionDigits = 2
-        
-        let formattedValue = formatter.string(from: NSDecimalNumber(decimal: value)) ?? "\(value)"
-        return "\(formattedValue) \(unit)"
+        NumberFormatters.formatDecimalWithUnit(value, unit: unit)
     }
     
     private func calculateMaxDateWidth() -> CGFloat {

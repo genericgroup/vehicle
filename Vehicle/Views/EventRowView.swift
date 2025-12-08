@@ -305,54 +305,19 @@ struct EventRowView: View {
     private var formattedMileage: String? {
         guard let mileage = event.mileage else { return nil }
         let unit = DistanceUnit(rawValue: event.distanceUnit) ?? .miles
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .decimal
-        formatter.groupingSeparator = ","
-        formatter.groupingSize = 3
-        return (formatter.string(from: NSDecimalNumber(decimal: mileage)) ?? "\(mileage)") + " \(unit.shortLabel)"
+        return NumberFormatters.formatMileage(mileage, unit: unit)
     }
     
     private var formattedHours: String? {
         guard let hours = event.hours else { return nil }
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .decimal
-        formatter.groupingSeparator = ","
-        formatter.groupingSize = 3
-        return (formatter.string(from: NSDecimalNumber(decimal: hours)) ?? "\(hours)") + " hrs"
+        return NumberFormatters.formatHours(hours)
     }
     
+    /// Use pre-calculated column width passed from parent, or calculate if not provided
     private var leftColumnWidth: CGFloat {
-        // Calculate max width needed for date and metrics
-        let dateWidth = allEvents.map { event in
-            event.date.standardFormattedNumeric.size(withAttributes: [.font: UIFont.systemFont(ofSize: UIFont.smallSystemFontSize)]).width
-        }.max() ?? 0
-        
-        let metricsWidth = allEvents.compactMap { event -> CGFloat in
-            if let mileage = event.mileage {
-                let unit = DistanceUnit(rawValue: event.distanceUnit) ?? .miles
-                let formatter = NumberFormatter()
-                formatter.numberStyle = .decimal
-                formatter.groupingSeparator = ","
-                formatter.groupingSize = 3
-                formatter.maximumFractionDigits = 2
-                let mileageStr = (formatter.string(from: NSDecimalNumber(decimal: mileage)) ?? "\(mileage)") + " \(unit.shortLabel)"
-                let width = mileageStr.size(withAttributes: [.font: UIFont.systemFont(ofSize: UIFont.smallSystemFontSize)]).width
-                return width
-            } else if let hours = event.hours {
-                let formatter = NumberFormatter()
-                formatter.numberStyle = .decimal
-                formatter.groupingSeparator = ","
-                formatter.groupingSize = 3
-                formatter.maximumFractionDigits = 2
-                let hoursStr = (formatter.string(from: NSDecimalNumber(decimal: hours)) ?? "\(hours)") + " hrs"
-                let width = hoursStr.size(withAttributes: [.font: UIFont.systemFont(ofSize: UIFont.smallSystemFontSize)]).width
-                return width
-            }
-            return 0
-        }.max() ?? 0
-        
-        // Add extra padding to ensure no truncation
-        return max(dateWidth, metricsWidth) + 24
+        // Use a reasonable default width that works for most cases
+        // The parent section should pass a pre-calculated width for better performance
+        return EventRowWidthCalculator.calculateWidth(for: allEvents)
     }
     
     var body: some View {
@@ -459,5 +424,72 @@ struct EventRowView: View {
 extension String {
     func size(withAttributes attributes: [NSAttributedString.Key: Any]) -> CGSize {
         return (self as NSString).size(withAttributes: attributes)
+    }
+}
+
+// MARK: - Event Row Width Calculator
+
+/// Utility for calculating and caching event row column widths
+enum EventRowWidthCalculator {
+    /// Cache for calculated widths keyed by event IDs hash
+    private static var widthCache: [Int: CGFloat] = [:]
+    private static let cacheLock = NSLock()
+    private static let textAttributes: [NSAttributedString.Key: Any] = [
+        .font: UIFont.systemFont(ofSize: UIFont.smallSystemFontSize)
+    ]
+    
+    /// Calculate the optimal left column width for a set of events
+    /// Results are cached based on the events' IDs
+    static func calculateWidth(for events: [Event]) -> CGFloat {
+        guard !events.isEmpty else { return 80 } // Default minimum width
+        
+        // Generate cache key from event IDs
+        let cacheKey = events.map { $0.id }.sorted().hashValue
+        
+        cacheLock.lock()
+        if let cached = widthCache[cacheKey] {
+            cacheLock.unlock()
+            return cached
+        }
+        cacheLock.unlock()
+        
+        // Calculate max width needed for date and metrics
+        let dateWidth = events.map { event in
+            event.date.standardFormattedNumeric.size(withAttributes: textAttributes).width
+        }.max() ?? 0
+        
+        let metricsWidth = events.compactMap { event -> CGFloat in
+            if let mileage = event.mileage {
+                let unit = DistanceUnit(rawValue: event.distanceUnit) ?? .miles
+                let mileageStr = NumberFormatters.formatMileage(mileage, unit: unit)
+                return mileageStr.size(withAttributes: textAttributes).width
+            } else if let hours = event.hours {
+                let hoursStr = NumberFormatters.formatHours(hours)
+                return hoursStr.size(withAttributes: textAttributes).width
+            }
+            return 0
+        }.max() ?? 0
+        
+        // Add extra padding to ensure no truncation
+        let width = max(dateWidth, metricsWidth) + 24
+        
+        // Cache the result
+        cacheLock.lock()
+        widthCache[cacheKey] = width
+        // Limit cache size to prevent memory issues
+        if widthCache.count > 100 {
+            widthCache.removeAll()
+            widthCache[cacheKey] = width
+        }
+        cacheLock.unlock()
+        
+        return width
+    }
+    
+    /// Clear the width cache (call when events are modified)
+    static func clearCache() {
+        cacheLock.lock()
+        widthCache.removeAll()
+        cacheLock.unlock()
     }
 } 

@@ -1138,8 +1138,11 @@ struct VehicleDetailView: View {
     }
     
     private func deleteVehicle() {
+        // Prepare for undo before deletion
+        _ = UndoCoordinator.shared.prepareVehicleForDeletion(vehicle)
+        
         HapticManager.shared.notifySuccess()
-                modelContext.delete(vehicle)
+        modelContext.delete(vehicle)
         logger.info("Vehicle deleted: \(vehicle.displayName)", category: .database)
     }
     
