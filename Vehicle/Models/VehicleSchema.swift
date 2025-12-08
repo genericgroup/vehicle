@@ -61,6 +61,18 @@ enum SchemaVersionManager {
         return stored != currentSchemaVersion
     }
     
+    /// Check if this is the first launch (no stored version yet)
+    static var isFirstLaunch: Bool {
+        storedSchemaVersion == nil
+    }
+    
+    /// Perform quick first-launch setup synchronously (just records version, no async work needed)
+    static func handleFirstLaunchIfNeeded() {
+        if isFirstLaunch {
+            recordCurrentVersion()
+        }
+    }
+    
     /// Record that the current schema version is now in use
     static func recordCurrentVersion() {
         storedSchemaVersion = currentSchemaVersion
@@ -587,35 +599,13 @@ class MigrationCoordinator: ObservableObject {
         logger.debug("MigrationCoordinator initialized", category: .database)
     }
     
-    /// Perform migration check and execute if needed
+    /// Perform migration - called only when migration is actually needed
+    /// Note: Caller should verify SchemaVersionManager.needsMigration before calling
     func performMigrationIfNeeded() async {
-        migrationState = .checkingVersion
-        migrationProgress = 0.1
-        
-        // Small delay to show the UI
-        try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
-        
-        // Check if this is first launch
-        if SchemaVersionManager.storedSchemaVersion == nil {
-            logger.info("First launch detected - recording initial schema version", category: .database)
-            SchemaVersionManager.recordCurrentVersion()
-            migrationState = .completed
-            migrationProgress = 1.0
-            return
-        }
-        
-        // Check if migration is needed
-        guard SchemaVersionManager.needsMigration else {
-            logger.info("No migration needed - schema version is current", category: .database)
-            migrationState = .completed
-            migrationProgress = 1.0
-            return
-        }
-        
         let oldVersion = SchemaVersionManager.storedSchemaVersion ?? "unknown"
         let newVersion = SchemaVersionManager.currentSchemaVersion
         
-        logger.info("Migration needed: \(oldVersion) → \(newVersion)", category: .database)
+        logger.info("Starting migration: \(oldVersion) → \(newVersion)", category: .database)
         
         // Create backup before migration
         migrationState = .creatingBackup
