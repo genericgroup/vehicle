@@ -254,6 +254,8 @@ private struct AppearanceSection: View {
                         .tag(option.rawValue)
                 }
             }
+            .accessibilityLabel("Sort vehicles by")
+            .accessibilityHint("Choose how to sort your vehicle list")
             
             Picker("Group Vehicles By", selection: $groupOption) {
                 ForEach(VehicleGroupOption.allCases, id: \.self) { option in
@@ -261,9 +263,15 @@ private struct AppearanceSection: View {
                         .tag(option.rawValue)
                 }
             }
+            .accessibilityLabel("Group vehicles by")
+            .accessibilityHint("Choose how to group your vehicle list")
             
             Toggle("Show Nicknames in Vehicle List", isOn: $showNicknamesInList)
+                .accessibilityLabel("Show nicknames in vehicle list")
+                .accessibilityHint("When enabled, displays vehicle nicknames instead of make and model")
             Toggle("Show Icon in Vehicle List & Title Bar", isOn: $showIconsInList)
+                .accessibilityLabel("Show icons in vehicle list and title bar")
+                .accessibilityHint("When enabled, displays emoji icons next to vehicle names")
         } header: {
             Text("APPEARANCE")
         }
@@ -326,6 +334,8 @@ private struct DataSection: View {
                 }
             }
             .disabled(isExporting || vehicles.isEmpty)
+            .accessibilityLabel("Export as JSON")
+            .accessibilityHint("Export all vehicle data as a JSON file for backup or transfer")
             
             Button {
                 onExportCSV()
@@ -339,6 +349,8 @@ private struct DataSection: View {
                 }
             }
             .disabled(isExporting || vehicles.isEmpty)
+            .accessibilityLabel("Export as CSV")
+            .accessibilityHint("Export all vehicle data as a spreadsheet-compatible CSV file")
             
             Button {
                 showingBackupConfirmation = true
@@ -352,12 +364,16 @@ private struct DataSection: View {
                 }
             }
             .disabled(isCreatingBackup)
+            .accessibilityLabel("Create backup")
+            .accessibilityHint("Create a local backup copy of your database")
             
             Button(role: .destructive) {
                 showingDeleteConfirmation = true
             } label: {
                 Label("Delete All Records", systemImage: "trash")
             }
+            .accessibilityLabel("Delete all records")
+            .accessibilityHint("Permanently delete all vehicles, events, and ownership records")
         } header: {
             Text("DATA")
         } footer: {
@@ -374,30 +390,40 @@ private struct AboutSection: View {
                     .foregroundStyle(.primary)
                     .frame(height: 38)
             }
+            .accessibilityLabel("Developer website")
+            .accessibilityHint("Opens the developer website in your browser")
             
             Link(destination: URL(string: "https://www.genericgroup.net/privacy")!) {
                 Label("Privacy Policy", systemImage: "hand.raised.fill")
                     .foregroundStyle(.primary)
                     .frame(height: 38)
             }
+            .accessibilityLabel("Privacy policy")
+            .accessibilityHint("Opens the privacy policy in your browser")
             
             Link(destination: URL(string: "https://www.genericgroup.net/terms")!) {
                 Label("Terms of Use", systemImage: "doc.text.fill")
                     .foregroundStyle(.primary)
                     .frame(height: 38)
             }
+            .accessibilityLabel("Terms of use")
+            .accessibilityHint("Opens the terms of use in your browser")
             
             Link(destination: URL(string: "https://www.genericgroup.net/contact")!) {
                 Label("Contact Us", systemImage: "envelope.fill")
                     .foregroundStyle(.primary)
                     .frame(height: 38)
             }
+            .accessibilityLabel("Contact us")
+            .accessibilityHint("Opens the contact page in your browser")
             
             Link(destination: URL(string: "https://genericgroup.net/faq#vehicle-pro")!) {
                 Label("FAQ", systemImage: "questionmark.circle.fill")
                     .foregroundStyle(.primary)
                     .frame(height: 38)
             }
+            .accessibilityLabel("Frequently asked questions")
+            .accessibilityHint("Opens the FAQ page in your browser")
             
             Button {
                 guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene else { return }
@@ -407,6 +433,8 @@ private struct AboutSection: View {
                     .foregroundStyle(.primary)
                     .frame(height: 38)
             }
+            .accessibilityLabel("Rate this app")
+            .accessibilityHint("Opens the App Store to leave a review")
             
             LabeledContent {
                 Text(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "Unknown")
@@ -415,6 +443,7 @@ private struct AboutSection: View {
                 Text("Version")
             }
             .frame(height: 38)
+            .accessibilityLabel("App version \(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "Unknown")")
         } header: {
             Text("ABOUT")
         }
@@ -437,6 +466,7 @@ private struct SyncAndNetworkSection: View {
             } label: {
                 Text("Network Status")
             }
+            .accessibilityLabel("Network status: \(networkMonitor.isConnected ? "Connected" : "Disconnected")")
             
             LabeledContent {
                 HStack {
@@ -448,6 +478,7 @@ private struct SyncAndNetworkSection: View {
             } label: {
                 Text("iCloud Status")
             }
+            .accessibilityLabel("iCloud status: \(networkMonitor.isCloudKitAvailable ? "Available" : "Unavailable")")
             
             if let lastSync = networkMonitor.lastSyncAttempt {
                 LabeledContent {
@@ -456,6 +487,7 @@ private struct SyncAndNetworkSection: View {
                 } label: {
                     Text("Last Sync")
                 }
+                .accessibilityLabel("Last sync attempt")
             }
             
             if networkMonitor.syncRetryCount > 0 {
@@ -465,6 +497,7 @@ private struct SyncAndNetworkSection: View {
                 } label: {
                     Text("Retry Count")
                 }
+                .accessibilityLabel("Sync retry count: \(networkMonitor.syncRetryCount)")
             }
             
             Button {
@@ -473,6 +506,8 @@ private struct SyncAndNetworkSection: View {
                 Label("Reset Sync State", systemImage: "arrow.clockwise")
             }
             .disabled(!networkMonitor.isConnected || !networkMonitor.isCloudKitAvailable)
+            .accessibilityLabel("Reset sync state")
+            .accessibilityHint("Clears sync tokens and triggers a fresh sync with iCloud")
         } header: {
             Text("SYNC & NETWORK")
         } footer: {

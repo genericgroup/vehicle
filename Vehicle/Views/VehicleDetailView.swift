@@ -827,6 +827,8 @@ struct VehicleInfoSection: View {
                 .focused($focusedField)
                 .multilineTextAlignment(.trailing)
                 .foregroundStyle(.primary)
+                .accessibilityLabel("Vehicle make")
+                .accessibilityHint("Enter the manufacturer name")
             }
             .frame(height: rowHeight)
             
@@ -838,6 +840,8 @@ struct VehicleInfoSection: View {
                 .focused($focusedField)
                 .multilineTextAlignment(.trailing)
                 .foregroundStyle(.primary)
+                .accessibilityLabel("Vehicle model")
+                .accessibilityHint("Enter the model name")
             }
             .frame(height: rowHeight)
             
@@ -849,6 +853,8 @@ struct VehicleInfoSection: View {
                             .foregroundStyle(.primary)
                     }
                 }
+                .accessibilityLabel("Vehicle year")
+                .accessibilityHint("Select the model year")
             }
             .frame(height: rowHeight)
             
@@ -857,6 +863,8 @@ struct VehicleInfoSection: View {
             }
             .foregroundStyle(.primary)
             .frame(height: rowHeight)
+            .accessibilityLabel("Vehicle color: \(vehicle.color)")
+            .accessibilityHint("Tap to change the vehicle color")
             
             LabeledContent("Nickname") {
                 TextField("Optional", text: Binding(
@@ -869,6 +877,8 @@ struct VehicleInfoSection: View {
                 .focused($focusedField)
                 .multilineTextAlignment(.trailing)
                 .foregroundStyle(.primary)
+                .accessibilityLabel("Vehicle nickname")
+                .accessibilityHint("Enter an optional nickname for this vehicle")
             }
             .frame(height: rowHeight)
             
@@ -885,6 +895,8 @@ struct VehicleInfoSection: View {
                             .font(.title2)
                     }
                 }
+                .accessibilityLabel("Vehicle icon: \(vehicle.icon.isEmpty ? "None" : vehicle.icon)")
+                .accessibilityHint("Tap to select an emoji icon for this vehicle")
             }
             .frame(height: rowHeight)
             
@@ -903,6 +915,8 @@ struct VehicleInfoSection: View {
             }
             .frame(height: rowHeight)
             .foregroundStyle(.primary)
+            .accessibilityLabel("Categorization: \(getMostSpecificCategory(vehicle))")
+            .accessibilityHint("Tap to change vehicle category, subcategory, and type")
             
             // Details Button
             Button(action: {
@@ -925,6 +939,8 @@ struct VehicleInfoSection: View {
             }
             .frame(height: rowHeight)
             .foregroundStyle(.primary)
+            .accessibilityLabel("Vehicle details")
+            .accessibilityHint("Tap to edit VIN, serial number, fuel type, and other specifications")
             
             // Notes Button
             Button(action: {
@@ -944,6 +960,8 @@ struct VehicleInfoSection: View {
             }
             .frame(height: rowHeight)
             .foregroundStyle(.primary)
+            .accessibilityLabel("Notes: \(vehicle.notes ?? "None")")
+            .accessibilityHint("Tap to view or edit notes about this vehicle")
             
             // Attachments Button
             Button(action: { 
@@ -960,6 +978,8 @@ struct VehicleInfoSection: View {
             }
             .frame(height: rowHeight)
             .foregroundStyle(.primary)
+            .accessibilityLabel("Attachments: \(vehicle.attachments?.count ?? 0)")
+            .accessibilityHint("Tap to view or add photos and documents")
         }
     }
     

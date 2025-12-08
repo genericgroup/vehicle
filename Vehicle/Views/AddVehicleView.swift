@@ -163,12 +163,16 @@ struct AddVehicleView: View {
                     LabeledContent("Make*") {
                         TextField("Required", text: $make)
                             .multilineTextAlignment(.trailing)
+                            .accessibilityLabel("Vehicle make")
+                            .accessibilityHint("Required. Enter the manufacturer name")
                     }
                     .frame(height: 38)
                     
                     LabeledContent("Model*") {
                         TextField("Required", text: $model)
                             .multilineTextAlignment(.trailing)
+                            .accessibilityLabel("Vehicle model")
+                            .accessibilityHint("Required. Enter the model name")
                     }
                     .frame(height: 38)
                     
@@ -181,6 +185,8 @@ struct AddVehicleView: View {
                             }
                         }
                         .pickerStyle(.menu)
+                        .accessibilityLabel("Vehicle year")
+                        .accessibilityHint("Select the model year")
                     }
                     .frame(height: 38)
                     
@@ -188,10 +194,14 @@ struct AddVehicleView: View {
                         ColorPickerView(selection: $color, logger: logger)
                     }
                     .frame(height: 38)
+                    .accessibilityLabel("Vehicle color: \(color)")
+                    .accessibilityHint("Tap to select a color")
                     
                     LabeledContent("Nickname") {
                         TextField("Optional", text: $nickname)
                             .multilineTextAlignment(.trailing)
+                            .accessibilityLabel("Vehicle nickname")
+                            .accessibilityHint("Optional. Enter a nickname for this vehicle")
                     }
                     .frame(height: 38)
                     
@@ -203,6 +213,8 @@ struct AddVehicleView: View {
                             Text(icon)
                                 .font(.title2)
                         }
+                        .accessibilityLabel("Vehicle icon: \(icon)")
+                        .accessibilityHint("Tap to select an emoji icon")
                     }
                     .frame(height: 38)
                 } header: {
@@ -221,6 +233,8 @@ struct AddVehicleView: View {
                                 Text(type.displayName).tag(type as VehicleType?)
                             }
                         }
+                        .accessibilityLabel("Vehicle category")
+                        .accessibilityHint("Required. Select the type of vehicle")
                     }
                     .frame(height: 38)
                     
@@ -232,6 +246,8 @@ struct AddVehicleView: View {
                                     Text(subcategory.displayName).tag(subcategory as VehicleSubcategory?)
                                 }
                             }
+                            .accessibilityLabel("Vehicle subcategory")
+                            .accessibilityHint("Optional. Select a more specific category")
                         }
                         .frame(height: 38)
                         
@@ -243,6 +259,8 @@ struct AddVehicleView: View {
                                         Text(type.displayName).tag(type as VehicleTypeDetail?)
                                     }
                                 }
+                                .accessibilityLabel("Vehicle type")
+                                .accessibilityHint("Optional. Select the specific vehicle type")
                             }
                             .frame(height: 38)
                         }
@@ -259,6 +277,8 @@ struct AddVehicleView: View {
                     LabeledContent("Trim Level") {
                         TextField("Optional", text: $trimLevel)
                             .multilineTextAlignment(.trailing)
+                            .accessibilityLabel("Trim level")
+                            .accessibilityHint("Optional. Enter the trim level like LX, EX, or Sport")
                     }
                     .frame(height: 38)
                     
@@ -266,6 +286,8 @@ struct AddVehicleView: View {
                         TextField("Optional", text: $vin)
                             .multilineTextAlignment(.trailing)
                             .textInputAutocapitalization(.characters)
+                            .accessibilityLabel("Vehicle identification number")
+                            .accessibilityHint("Optional. Enter the 17-character VIN")
                     }
                     .frame(height: 38)
                     
@@ -273,6 +295,8 @@ struct AddVehicleView: View {
                         TextField("Optional", text: $serialNumber)
                             .multilineTextAlignment(.trailing)
                             .textInputAutocapitalization(.characters)
+                            .accessibilityLabel("Serial number")
+                            .accessibilityHint("Optional. Enter the serial number for non-automobile vehicles")
                     }
                     .frame(height: 38)
                     
@@ -282,6 +306,8 @@ struct AddVehicleView: View {
                                 Text(type.displayName).tag(type)
                             }
                         }
+                        .accessibilityLabel("Fuel type")
+                        .accessibilityHint("Select the type of fuel this vehicle uses")
                     }
                     .frame(height: 38)
                     
@@ -291,6 +317,8 @@ struct AddVehicleView: View {
                                 Text(type.displayName).tag(type)
                             }
                         }
+                        .accessibilityLabel("Engine type")
+                        .accessibilityHint("Select the engine configuration")
                     }
                     .frame(height: 38)
                     
@@ -300,6 +328,8 @@ struct AddVehicleView: View {
                                 Text(type.displayName).tag(type)
                             }
                         }
+                        .accessibilityLabel("Drive type")
+                        .accessibilityHint("Select the drivetrain configuration")
                     }
                     .frame(height: 38)
                     
@@ -309,6 +339,8 @@ struct AddVehicleView: View {
                                 Text(type.displayName).tag(type)
                             }
                         }
+                        .accessibilityLabel("Transmission type")
+                        .accessibilityHint("Select automatic or manual transmission")
                     }
                     .frame(height: 38)
                 }
