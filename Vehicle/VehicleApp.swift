@@ -165,7 +165,7 @@ struct MigrationProgressView: View {
                 .font(.system(size: 60))
                 .foregroundStyle(.blue)
             
-            Text("Vehicle")
+            Text("Vehicle Pro")
                 .font(.largeTitle)
                 .fontWeight(.bold)
             
