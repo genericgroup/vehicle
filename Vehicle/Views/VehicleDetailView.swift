@@ -1267,26 +1267,46 @@ extension Attachment {
         return image.preparingThumbnail(of: size)
     }
     
+    /// Load thumbnail with MainActor isolation to avoid Sendable issues with SwiftData models
+    @MainActor
     var thumbnail: UIImage? {
         get async {
-            if let cached = try? await loadThumbnailFromCache() {
+            // Capture necessary data before any async operations
+            let attachmentId = self.id
+            let attachmentData = self.data
+            let isImageType = self.isImage
+            
+            guard isImageType else { return nil }
+            
+            // Try to load from cache first
+            if let cached = loadThumbnailFromCacheSync(id: attachmentId) {
                 return cached
             }
-            let thumbnail = generateThumbnail()
-            await saveThumbnailToCache(thumbnail)
+            
+            // Generate thumbnail from data
+            guard let image = UIImage(data: attachmentData) else { return nil }
+            let size = CGSize(width: 120, height: 120)
+            let thumbnail = image.preparingThumbnail(of: size)
+            
+            // Save to cache
+            if let thumbnail = thumbnail {
+                saveThumbnailToCacheSync(id: attachmentId, thumbnail: thumbnail)
+            }
+            
             return thumbnail
         }
     }
     
-    private func loadThumbnailFromCache() async throws -> UIImage? {
+    /// Synchronous cache loading to avoid actor boundary issues
+    private func loadThumbnailFromCacheSync(id: String) -> UIImage? {
         let cacheURL = FileManager.attachmentCacheURL.appendingPathComponent("\(id)-thumb.jpg")
-        let data = try Data(contentsOf: cacheURL)
+        guard let data = try? Data(contentsOf: cacheURL) else { return nil }
         return UIImage(data: data)
     }
     
-    private func saveThumbnailToCache(_ thumbnail: UIImage?) async {
-        guard let thumbnail = thumbnail,
-              let data = thumbnail.jpegData(compressionQuality: 0.8) else { return }
+    /// Synchronous cache saving to avoid actor boundary issues
+    private func saveThumbnailToCacheSync(id: String, thumbnail: UIImage) {
+        guard let data = thumbnail.jpegData(compressionQuality: 0.8) else { return }
         let cacheURL = FileManager.attachmentCacheURL.appendingPathComponent("\(id)-thumb.jpg")
         try? data.write(to: cacheURL)
     }
