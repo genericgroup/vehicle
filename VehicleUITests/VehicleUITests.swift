@@ -70,8 +70,14 @@ final class VehicleUITests: XCTestCase {
         guard waitForAndTapButton("Add Menu"),
               waitForAndTapButton("Add Vehicle") else { return false }
         
-        // Fill required fields
+        // Wait for form to fully appear (sheet animation)
         let makeField = app.textFields["Make*"]
+        guard makeField.waitForExistence(timeout: 5) else { return false }
+        
+        // Small delay for layout to stabilize after sheet animation
+        Thread.sleep(forTimeInterval: 0.3)
+        
+        // Fill required fields
         let modelField = app.textFields["Model*"]
         
         guard waitForAndTypeText(make, into: makeField),
