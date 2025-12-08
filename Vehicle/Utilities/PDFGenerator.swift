@@ -161,7 +161,7 @@ class PDFGenerator {
             
             return fileURL
         } catch {
-            print("Error generating PDF: \(error.localizedDescription)")
+            AppLogger.shared.error("Error generating PDF: \(error.localizedDescription)", category: .fileSystem)
             return nil
         }
     }

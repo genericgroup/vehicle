@@ -787,7 +787,7 @@ struct AudioPlayerView: View {
                 player = try AVAudioPlayer(data: data)
                 player?.prepareToPlay()
             } catch {
-                print("Failed to create audio player: \(error)")
+                AppLogger.shared.error("Failed to create audio player: \(error.localizedDescription)", category: .general)
             }
         }
         .onReceive(timer) { _ in
@@ -1144,6 +1144,7 @@ struct VehicleDetailView: View {
         HapticManager.shared.notifySuccess()
         modelContext.delete(vehicle)
         logger.info("Vehicle deleted: \(vehicle.displayName)", category: .database)
+        dismiss()
     }
     
     private func validateVehicle() {

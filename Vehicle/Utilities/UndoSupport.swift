@@ -144,18 +144,18 @@ struct VehicleSnapshot {
         
         context.insert(vehicle)
         
-        // Restore events
+        // Restore events using the proper method
         for eventSnapshot in events {
             let event = eventSnapshot.restore(for: vehicle)
             context.insert(event)
-            vehicle.events?.append(event)
+            vehicle.addEvent(event)
         }
         
-        // Restore ownership records
+        // Restore ownership records using the proper method
         for recordSnapshot in ownershipRecords {
             let record = recordSnapshot.restore(for: vehicle)
             context.insert(record)
-            vehicle.ownershipRecords?.append(record)
+            vehicle.addOwnershipRecord(record)
         }
         
         return vehicle
