@@ -346,6 +346,7 @@ private struct VehicleListView: View {
         .searchable(text: $searchText, 
                    placement: .navigationBarDrawer(displayMode: .always), 
                    prompt: "Search vehicles, events, and records")
+        .accessibilityIdentifier("Search vehicles, events, and records")
         .overlay {
             if !searchText.isEmpty && searchResults.isEmpty {
                 ContentUnavailableView("No Results", 
@@ -388,6 +389,7 @@ private struct AddMenuButton: View {
             } label: {
                 Label("Add Vehicle", systemImage: "car.fill")
             }
+            .accessibilityIdentifier("Add Vehicle")
             .accessibilityLabel("Add Vehicle")
             .accessibilityHint("Opens form to add a new vehicle")
 
@@ -397,6 +399,7 @@ private struct AddMenuButton: View {
             } label: {
                 Label("Add Event", systemImage: "calendar.badge.plus")
             }
+            .accessibilityIdentifier("Add Event")
             .accessibilityLabel("Add Event")
             .accessibilityHint(vehicles.isEmpty ? "Disabled until you add a vehicle" : "Opens form to add a new event")
             .disabled(vehicles.isEmpty)
@@ -407,17 +410,19 @@ private struct AddMenuButton: View {
             } label: {
                 Label("Add Ownership Record", systemImage: "person.badge.plus")
             }
+            .accessibilityIdentifier("Add Ownership Record")
             .accessibilityLabel("Add Ownership Record")
             .accessibilityHint(vehicles.isEmpty ? "Disabled until you add a vehicle" : "Opens form to add a new ownership record")
             .disabled(vehicles.isEmpty)
         } label: {
             Label("Add", systemImage: "plus")
-                .accessibilityLabel("Add Menu")
-                .accessibilityHint("Opens menu with options to add vehicles, events, and ownership records")
                 .simultaneousGesture(TapGesture().onEnded {
                     viewModel.triggerMediumImpactHaptic()
                 })
         }
+        .accessibilityIdentifier("Add Menu")
+        .accessibilityLabel("Add Menu")
+        .accessibilityHint("Opens menu with options to add vehicles, events, and ownership records")
         .menuStyle(.button)
         .menuIndicator(.hidden)
         .privacySensitive(true)
@@ -438,6 +443,7 @@ private struct SettingsButton: View {
         } label: {
             Label("Settings", systemImage: "gear")
         }
+        .accessibilityIdentifier("Settings")
         .accessibilityLabel("Settings")
         .accessibilityHint("Opens settings menu")
     }

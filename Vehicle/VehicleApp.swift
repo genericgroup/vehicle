@@ -94,39 +94,49 @@ struct MigrationAwareContentView: View {
     @StateObject private var migrationCoordinator = MigrationCoordinator()
     @State private var hasStartedMigrationCheck = false
     
+    /// Skip migration during UI testing for faster test execution
+    private var isUITesting: Bool {
+        ProcessInfo.processInfo.arguments.contains("--uitesting")
+    }
+    
     var body: some View {
         Group {
-            switch migrationCoordinator.migrationState {
-            case .idle, .checkingVersion:
-                MigrationProgressView(
-                    state: migrationCoordinator.migrationState,
-                    progress: migrationCoordinator.migrationProgress
-                )
-                .task {
-                    if !hasStartedMigrationCheck {
-                        hasStartedMigrationCheck = true
-                        await migrationCoordinator.performMigrationIfNeeded()
-                    }
-                }
-                
-            case .creatingBackup, .migrating, .verifying:
-                MigrationProgressView(
-                    state: migrationCoordinator.migrationState,
-                    progress: migrationCoordinator.migrationProgress
-                )
-                
-            case .completed:
+            // Skip migration entirely during UI testing
+            if isUITesting {
                 ContentView()
-                
-            case .failed:
-                MigrationErrorView(
-                    error: migrationCoordinator.migrationError,
-                    onRetry: {
-                        Task {
-                            await migrationCoordinator.retryMigration()
+            } else {
+                switch migrationCoordinator.migrationState {
+                case .idle, .checkingVersion:
+                    MigrationProgressView(
+                        state: migrationCoordinator.migrationState,
+                        progress: migrationCoordinator.migrationProgress
+                    )
+                    .task {
+                        if !hasStartedMigrationCheck {
+                            hasStartedMigrationCheck = true
+                            await migrationCoordinator.performMigrationIfNeeded()
                         }
                     }
-                )
+                    
+                case .creatingBackup, .migrating, .verifying:
+                    MigrationProgressView(
+                        state: migrationCoordinator.migrationState,
+                        progress: migrationCoordinator.migrationProgress
+                    )
+                    
+                case .completed:
+                    ContentView()
+                    
+                case .failed:
+                    MigrationErrorView(
+                        error: migrationCoordinator.migrationError,
+                        onRetry: {
+                            Task {
+                                await migrationCoordinator.retryMigration()
+                            }
+                        }
+                    )
+                }
             }
         }
     }
