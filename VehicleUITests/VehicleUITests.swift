@@ -135,8 +135,11 @@ final class VehicleUITests: XCTestCase {
         XCTAssertTrue(waitForAndTapButton("Add Menu"))
         XCTAssertTrue(waitForAndTapButton("Add Vehicle"))
         
-        // Verify form sections
+        // Wait for form to fully appear (sheet animation)
         XCTAssertTrue(app.staticTexts["BASIC INFORMATION"].waitForExistence(timeout: 5))
+        Thread.sleep(forTimeInterval: 0.3)
+        
+        // Verify form sections
         XCTAssertTrue(app.staticTexts["CATEGORIZATION"].waitForExistence(timeout: 3))
         
         // Verify required fields
@@ -167,8 +170,13 @@ final class VehicleUITests: XCTestCase {
         XCTAssertTrue(waitForAndTapButton("Add Menu"))
         XCTAssertTrue(waitForAndTapButton("Add Vehicle"))
         
+        // Wait for form to fully appear (sheet animation)
+        let makeField = app.textFields["Make*"]
+        XCTAssertTrue(makeField.waitForExistence(timeout: 5))
+        Thread.sleep(forTimeInterval: 0.3)
+        
         // Fill in required fields
-        XCTAssertTrue(waitForAndTypeText("Ford", into: app.textFields["Make*"]))
+        XCTAssertTrue(waitForAndTypeText("Ford", into: makeField))
         XCTAssertTrue(waitForAndTypeText("Mustang", into: app.textFields["Model*"]))
         
         // Add nickname
@@ -193,7 +201,11 @@ final class VehicleUITests: XCTestCase {
     
     func testSortMenuExists() throws {
         XCTAssertTrue(waitForAndTapButton("Settings"))
+        
+        // Wait for settings sheet to fully appear
         XCTAssertTrue(app.navigationBars["Settings"].waitForExistence(timeout: 5))
+        Thread.sleep(forTimeInterval: 0.3)
+        
         XCTAssertTrue(app.staticTexts["APPEARANCE"].waitForExistence(timeout: 5))
         
         // Verify sort picker exists
@@ -207,7 +219,10 @@ final class VehicleUITests: XCTestCase {
     
     func testGroupMenuExists() throws {
         XCTAssertTrue(waitForAndTapButton("Settings"))
+        
+        // Wait for settings sheet to fully appear
         XCTAssertTrue(app.navigationBars["Settings"].waitForExistence(timeout: 5))
+        Thread.sleep(forTimeInterval: 0.3)
         
         // Verify group picker exists
         let groupPicker = app.cells["Group Vehicles By"]
