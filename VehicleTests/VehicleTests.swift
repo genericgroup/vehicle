@@ -646,3 +646,100 @@ final class SortGroupOptionsTests: XCTestCase {
         XCTAssertTrue(VehicleGroupOption.allCases.contains(.make))
     }
 }
+
+// MARK: - Schema Version Manager Tests
+
+final class SchemaVersionManagerTests: XCTestCase {
+    
+    private let testSchemaVersionKey = "com.vehicle.schemaVersion"
+    
+    override func tearDownWithError() throws {
+        // Clean up test data from UserDefaults
+        UserDefaults.standard.removeObject(forKey: testSchemaVersionKey)
+    }
+    
+    func testCurrentSchemaVersion() throws {
+        // Current schema version should be a valid version string
+        let version = SchemaVersionManager.currentSchemaVersion
+        XCTAssertFalse(version.isEmpty, "Schema version should not be empty")
+        
+        // Version should be in format "major.minor.patch"
+        let components = version.split(separator: ".")
+        XCTAssertEqual(components.count, 3, "Version should have 3 components (major.minor.patch)")
+        
+        // Each component should be a valid integer
+        for component in components {
+            XCTAssertNotNil(Int(component), "Version component '\(component)' should be a valid integer")
+        }
+    }
+    
+    func testIsFirstLaunch() throws {
+        // Clear any stored version to simulate first launch
+        UserDefaults.standard.removeObject(forKey: testSchemaVersionKey)
+        
+        // Should be first launch when no version is stored
+        XCTAssertTrue(SchemaVersionManager.isFirstLaunch, "Should be first launch when no version stored")
+        
+        // After recording version, should no longer be first launch
+        SchemaVersionManager.recordCurrentVersion()
+        XCTAssertFalse(SchemaVersionManager.isFirstLaunch, "Should not be first launch after recording version")
+    }
+    
+    func testHandleFirstLaunchIfNeeded() throws {
+        // Clear any stored version
+        UserDefaults.standard.removeObject(forKey: testSchemaVersionKey)
+        
+        // Verify no version stored initially
+        XCTAssertNil(SchemaVersionManager.storedSchemaVersion)
+        
+        // Handle first launch
+        SchemaVersionManager.handleFirstLaunchIfNeeded()
+        
+        // Version should now be recorded
+        XCTAssertNotNil(SchemaVersionManager.storedSchemaVersion)
+        XCTAssertEqual(SchemaVersionManager.storedSchemaVersion, SchemaVersionManager.currentSchemaVersion)
+    }
+    
+    func testHandleFirstLaunchIfNeededDoesNothingOnSubsequentLaunches() throws {
+        // Set up a stored version
+        let testVersion = "1.0.0"
+        UserDefaults.standard.set(testVersion, forKey: testSchemaVersionKey)
+        
+        // Call handleFirstLaunchIfNeeded - should not change the stored version
+        SchemaVersionManager.handleFirstLaunchIfNeeded()
+        
+        // Version should remain unchanged (not overwritten with current version)
+        XCTAssertEqual(SchemaVersionManager.storedSchemaVersion, testVersion)
+    }
+    
+    func testNeedsMigration() throws {
+        // Clear stored version - first launch should not need migration
+        UserDefaults.standard.removeObject(forKey: testSchemaVersionKey)
+        XCTAssertFalse(SchemaVersionManager.needsMigration, "First launch should not need migration")
+        
+        // Record current version - should not need migration
+        SchemaVersionManager.recordCurrentVersion()
+        XCTAssertFalse(SchemaVersionManager.needsMigration, "Current version should not need migration")
+        
+        // Set an old version - should need migration
+        UserDefaults.standard.set("0.0.1", forKey: testSchemaVersionKey)
+        XCTAssertTrue(SchemaVersionManager.needsMigration, "Old version should need migration")
+    }
+    
+    func testRecordMigrationSuccess() throws {
+        let oldVersion = "1.0.0"
+        let newVersion = SchemaVersionManager.currentSchemaVersion
+        
+        // Set old version
+        UserDefaults.standard.set(oldVersion, forKey: testSchemaVersionKey)
+        
+        // Record migration success
+        SchemaVersionManager.recordMigrationSuccess(from: oldVersion, to: newVersion)
+        
+        // Stored version should be updated
+        XCTAssertEqual(SchemaVersionManager.storedSchemaVersion, newVersion)
+        
+        // Last migration date should be set
+        XCTAssertNotNil(SchemaVersionManager.lastMigrationDate)
+    }
+}
