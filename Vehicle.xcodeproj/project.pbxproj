@@ -27,6 +27,7 @@
 		88350EC92D3EF79B00D8DEAF /* Vehicle.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Vehicle.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		88350EDD2D3EF79C00D8DEAF /* VehicleTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = VehicleTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		88350EE72D3EF79C00D8DEAF /* VehicleUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = VehicleUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		88B4F6932EE76023004FDE81 /* Vehicle.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = file; path = Vehicle.xctestplan; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -88,6 +89,7 @@
 		88350EC02D3EF79A00D8DEAF = {
 			isa = PBXGroup;
 			children = (
+				88B4F6932EE76023004FDE81 /* Vehicle.xctestplan */,
 				88350ECB2D3EF79B00D8DEAF /* Vehicle */,
 				88350EE02D3EF79C00D8DEAF /* VehicleTests */,
 				88350EEA2D3EF79C00D8DEAF /* VehicleUITests */,

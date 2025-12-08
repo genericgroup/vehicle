@@ -75,6 +75,7 @@ struct SettingsView: View {
                         HapticManager.standardButtonTap()
                         dismiss()
                     }
+                    .accessibilityIdentifier("Done")
                     .accessibilityLabel("Close settings")
                     .accessibilityHint("Return to the previous screen")
                 }

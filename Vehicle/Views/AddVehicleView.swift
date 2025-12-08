@@ -163,6 +163,7 @@ struct AddVehicleView: View {
                     LabeledContent("Make*") {
                         TextField("Required", text: $make)
                             .multilineTextAlignment(.trailing)
+                            .accessibilityIdentifier("Make*")
                             .accessibilityLabel("Vehicle make")
                             .accessibilityHint("Required. Enter the manufacturer name")
                     }
@@ -171,6 +172,7 @@ struct AddVehicleView: View {
                     LabeledContent("Model*") {
                         TextField("Required", text: $model)
                             .multilineTextAlignment(.trailing)
+                            .accessibilityIdentifier("Model*")
                             .accessibilityLabel("Vehicle model")
                             .accessibilityHint("Required. Enter the model name")
                     }
@@ -200,6 +202,7 @@ struct AddVehicleView: View {
                     LabeledContent("Nickname") {
                         TextField("Optional", text: $nickname)
                             .multilineTextAlignment(.trailing)
+                            .accessibilityIdentifier("Nickname")
                             .accessibilityLabel("Vehicle nickname")
                             .accessibilityHint("Optional. Enter a nickname for this vehicle")
                     }
@@ -233,6 +236,7 @@ struct AddVehicleView: View {
                                 Text(type.displayName).tag(type as VehicleType?)
                             }
                         }
+                        .accessibilityIdentifier("Category*")
                         .accessibilityLabel("Vehicle category")
                         .accessibilityHint("Required. Select the type of vehicle")
                     }
@@ -352,11 +356,13 @@ struct AddVehicleView: View {
                         HapticManager.shared.impact(style: .light)
                         dismiss()
                     }
+                    .accessibilityIdentifier("Cancel")
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Save") {
                         validateAndSave()
                     }
+                    .accessibilityIdentifier("Save")
                 }
                 ToolbarItem(placement: .keyboard) {
                     HStack {
