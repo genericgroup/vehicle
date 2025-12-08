@@ -7,81 +7,6 @@ import Observation
 import PhotosUI
 import UniformTypeIdentifiers
 
-struct ColorPickerView: View {
-    @Binding var selection: String
-    let logger: AppLogger
-    
-    init(selection: Binding<String>, logger: AppLogger = AppLogger.shared) {
-        self._selection = selection
-        self.logger = logger
-    }
-    
-    var body: some View {
-        Picker("Color", selection: $selection) {
-            ForEach(Vehicle.commonColors, id: \.self) { colorName in
-                ColorPickerRow(colorName: colorName)
-                    .tag(colorName)
-            }
-        }
-        .onChange(of: selection) { oldValue, newValue in
-            logger.debug("Color changed from \(oldValue) to \(newValue)", category: .userInterface)
-        }
-        .labelsHidden()
-        .pickerStyle(.menu)
-        .foregroundStyle(.primary)
-    }
-}
-
-struct ColorPickerRow: View {
-    let colorName: String
-    
-    var body: some View {
-        HStack {
-            Text(colorName)
-                .foregroundStyle(.primary)
-            Spacer()
-            if colorName != "Custom" {
-                ZStack {
-                    if colorName == "White" {
-                        Circle()
-                            .stroke(.black, lineWidth: 1)
-                            .frame(width: 12, height: 12)
-                    }
-                    if colorName == "Black" {
-                        Circle()
-                            .stroke(.white, lineWidth: 1)
-                            .frame(width: 12, height: 12)
-                    }
-                Image(systemName: "circle.fill")
-                    .symbolRenderingMode(.palette)
-                    .foregroundStyle(colorFromName(colorName), colorFromName(colorName).opacity(0.3))
-                    .font(.system(size: 12))
-                }
-            }
-        }
-        .frame(minWidth: 100, alignment: .leading)
-        .contentShape(Rectangle())
-    }
-    
-    private func colorFromName(_ name: String) -> Color {
-        switch name.lowercased() {
-        case "black": return .black
-        case "white": return .white
-        case "gray": return .gray
-        case "red": return .red
-        case "blue": return .blue
-        case "green": return .green
-        case "brown": return .brown
-        case "orange": return .orange
-        case "yellow": return .yellow
-        case "purple": return .purple
-        case "burgundy": return Color(red: 0.5, green: 0.0, blue: 0.13)
-        case "navy": return Color(red: 0.0, green: 0.0, blue: 0.5)
-        default: return .clear
-        }
-    }
-}
-
 // Helper extension for conditional view modifiers
 extension View {
     @ViewBuilder func `if`<Content: View>(_ condition: Bool, transform: (Self) -> Content) -> some View {
@@ -1066,7 +991,7 @@ struct VehicleDetailView: View {
     @State private var showingValidationError = false
     @State private var validationError: String?
     @State private var pdfURL: URL?
-    @AppStorage("showIconsInList") private var showIconsInList = true
+    @AppStorage(AppStorageKeys.showIconsInList) private var showIconsInList = true
     
     private let logger = AppLogger.shared
     
@@ -1281,32 +1206,6 @@ struct VehicleDetailView: View {
         errorMessage = message
         showingError = true
     }
-}
-
-struct ShareSheet: UIViewControllerRepresentable {
-    let activityItems: [Any]
-    let filename: String
-    private let logger = AppLogger.shared
-    
-    func makeUIViewController(context: Context) -> UIActivityViewController {
-        let controller = UIActivityViewController(
-            activityItems: activityItems,
-            applicationActivities: nil
-        )
-        
-        // Add cleanup handler if needed
-        if let url = activityItems.first as? URL {
-            controller.completionWithItemsHandler = { _, _, _, _ in
-                DispatchQueue.global(qos: .utility).async {
-                    try? FileManager.default.removeItem(at: url)
-                }
-            }
-        }
-        
-        return controller
-    }
-    
-    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
 }
 
 extension Collection {

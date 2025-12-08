@@ -142,22 +142,12 @@ struct AddOwnershipView: View {
         NavigationStack {
             Form {
                 Section {
-                    Picker("Vehicle*", selection: Binding(
-                        get: { selectedVehicle },
-                        set: { 
-                            HapticManager.standardSelectionChanged()
-                            selectedVehicle = $0 
-                        }
-                    )) {
-                        Text("Select Vehicle").tag(nil as Vehicle?)
-                        ForEach(vehicles) { vehicle in
-                            Text(vehicle.displayName).tag(vehicle as Vehicle?)
-                        }
-                    }
+                    VehiclePicker(
+                        vehicles: vehicles,
+                        selectedVehicle: $selectedVehicle,
+                        accessibilityHint: "Select a vehicle for this record"
+                    )
                     .frame(height: ViewConstants.rowHeight)
-                    .accessibilityLabel("Vehicle selection")
-                    .accessibilityHint("Select a vehicle for this record")
-                    .standardDynamicTypeSize()
                     
                     DatePicker("Date", selection: $date, displayedComponents: .date)
                         .frame(height: ViewConstants.rowHeight)
@@ -409,31 +399,6 @@ private struct OwnershipDetailsSection: View, Equatable {
         lhs.date == rhs.date &&
         lhs.selectedType == rhs.selectedType &&
         lhs.details == rhs.details
-    }
-}
-
-private struct VehiclePicker: View, Equatable {
-    let vehicles: [Vehicle]
-    @Binding var selectedVehicle: Vehicle?
-    
-    var body: some View {
-        Picker("Vehicle*", selection: Binding(
-            get: { selectedVehicle },
-            set: { 
-                HapticManager.standardSelectionChanged()
-                selectedVehicle = $0 
-            }
-        )) {
-            Text("Select Vehicle").tag(nil as Vehicle?)
-            ForEach(vehicles) { vehicle in
-                Text(vehicle.displayName).tag(vehicle as Vehicle?)
-            }
-        }
-    }
-    
-    static func == (lhs: VehiclePicker, rhs: VehiclePicker) -> Bool {
-        lhs.vehicles == rhs.vehicles &&
-        lhs.selectedVehicle?.id == rhs.selectedVehicle?.id
     }
 }
 

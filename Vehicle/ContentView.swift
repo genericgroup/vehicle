@@ -20,8 +20,8 @@ struct ContentView: View {
     @State private var _lastSearchResults: [SearchResultItem]?
     @State private var hasInitialized = false
     
-    @AppStorage("vehicleSortOption") private var sortOption = VehicleSortOption.none.rawValue
-    @AppStorage("vehicleGroupOption") private var groupOption = VehicleGroupOption.none.rawValue
+    @AppStorage(AppStorageKeys.vehicleSortOption) private var sortOption = VehicleSortOption.none.rawValue
+    @AppStorage(AppStorageKeys.vehicleGroupOption) private var groupOption = VehicleGroupOption.none.rawValue
     
     private let logger = AppLogger.shared
     

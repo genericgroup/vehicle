@@ -349,24 +349,6 @@ struct AddVehicleView: View {
             .ignoresSafeArea(.keyboard, edges: .bottom)
         }
     }
-    
-    private func colorFromName(_ name: String) -> Color {
-        switch name.lowercased() {
-        case "black": return .black
-        case "white": return .white
-        case "gray": return .gray
-        case "red": return .red
-        case "blue": return .blue
-        case "green": return .green
-        case "brown": return .brown
-        case "orange": return .orange
-        case "yellow": return .yellow
-        case "purple": return .purple
-        case "burgundy": return Color(red: 0.5, green: 0.0, blue: 0.13)
-        case "navy": return Color(red: 0.0, green: 0.0, blue: 0.5)
-        default: return .clear
-        }
-    }
 }
 
 struct ViewFrameKey: PreferenceKey {

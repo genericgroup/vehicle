@@ -3,9 +3,9 @@ import SwiftUI
 struct VehicleRowView: View {
     let vehicle: Vehicle
     let isSelected: Bool
-    @AppStorage("vehicleGroupOption") private var groupOption = VehicleGroupOption.none.rawValue
-    @AppStorage("showNicknamesInList") private var showNicknamesInList = true
-    @AppStorage("showIconsInList") private var showIconsInList = true
+    @AppStorage(AppStorageKeys.vehicleGroupOption) private var groupOption = VehicleGroupOption.none.rawValue
+    @AppStorage(AppStorageKeys.showNicknamesInList) private var showNicknamesInList = true
+    @AppStorage(AppStorageKeys.showIconsInList) private var showIconsInList = true
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.colorScheme) private var colorScheme
     

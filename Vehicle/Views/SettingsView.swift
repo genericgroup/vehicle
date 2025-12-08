@@ -14,10 +14,10 @@ struct SettingsView: View {
     @Query private var events: [Event]
     @Query private var ownershipRecords: [OwnershipRecord]
     
-    @AppStorage("vehicleSortOption") private var sortOption = VehicleSortOption.none.rawValue
-    @AppStorage("vehicleGroupOption") private var groupOption = VehicleGroupOption.none.rawValue
-    @AppStorage("showNicknamesInList") private var showNicknamesInList = true
-    @AppStorage("showIconsInList") private var showIconsInList = true
+    @AppStorage(AppStorageKeys.vehicleSortOption) private var sortOption = VehicleSortOption.none.rawValue
+    @AppStorage(AppStorageKeys.vehicleGroupOption) private var groupOption = VehicleGroupOption.none.rawValue
+    @AppStorage(AppStorageKeys.showNicknamesInList) private var showNicknamesInList = true
+    @AppStorage(AppStorageKeys.showIconsInList) private var showIconsInList = true
     
     @State private var showingDeleteConfirmation = false
     @State private var showingError = false

@@ -168,27 +168,6 @@ struct AddEventView: View {
 }
 
 // MARK: - Supporting Views
-private struct VehiclePicker: View, Equatable {
-    let vehicles: [Vehicle]
-    @Binding var selectedVehicle: Vehicle?
-    
-    var body: some View {
-        Picker("Vehicle*", selection: $selectedVehicle) {
-            Text("Select Vehicle").tag(nil as Vehicle?)
-            ForEach(vehicles) { vehicle in
-                Text(vehicle.displayName).tag(vehicle as Vehicle?)
-            }
-        }
-        .accessibilityLabel("Vehicle selection")
-        .accessibilityHint("Select a vehicle for this event")
-        .dynamicTypeSize(ViewConstants.dynamicTypeRange)
-    }
-    
-    static func == (lhs: VehiclePicker, rhs: VehiclePicker) -> Bool {
-        lhs.vehicles == rhs.vehicles &&
-        lhs.selectedVehicle?.id == rhs.selectedVehicle?.id
-    }
-}
 
 private struct CategoryPicker: View, Equatable {
     @Binding var selectedCategory: EventCategory
