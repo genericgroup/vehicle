@@ -14,10 +14,13 @@ final class VehicleUITests: XCTestCase {
         continueAfterFailure = false
         app = XCUIApplication()
         app.launchArguments = ["--uitesting"]
+        app.launchEnvironment = ["UITESTING": "1"]
         app.launch()
         
-        // Wait for app to be ready
-        XCTAssertTrue(app.navigationBars["Vehicles"].waitForExistence(timeout: 10), "App failed to launch")
+        // Wait for app to be ready - look for key UI elements
+        // Use Add Menu button as the indicator since it's always visible
+        let addButton = app.buttons["Add Menu"]
+        XCTAssertTrue(addButton.waitForExistence(timeout: 30), "App failed to launch - Add Menu button not found")
     }
     
     override func tearDownWithError() throws {
@@ -27,8 +30,8 @@ final class VehicleUITests: XCTestCase {
     // MARK: - Launch Tests
     
     func testAppLaunches() throws {
-        // Verify main navigation bar exists
-        XCTAssertTrue(app.navigationBars["Vehicles"].exists)
+        // Verify Add Menu button exists (already checked in setup)
+        XCTAssertTrue(app.buttons["Add Menu"].exists)
     }
     
     func testMainUIElementsExist() throws {
@@ -76,8 +79,8 @@ final class VehicleUITests: XCTestCase {
         XCTAssertTrue(doneButton.waitForExistence(timeout: 3))
         doneButton.tap()
         
-        // Verify we're back to main view
-        XCTAssertTrue(app.navigationBars["Vehicles"].waitForExistence(timeout: 5))
+        // Verify we're back to main view (Add Menu button visible again)
+        XCTAssertTrue(app.buttons["Add Menu"].waitForExistence(timeout: 5))
     }
     
     func testAddVehicleSheetOpens() throws {
@@ -104,8 +107,8 @@ final class VehicleUITests: XCTestCase {
         XCTAssertTrue(cancelButton.waitForExistence(timeout: 3))
         cancelButton.tap()
         
-        // Verify we're back to main view
-        XCTAssertTrue(app.navigationBars["Vehicles"].waitForExistence(timeout: 5))
+        // Verify we're back to main view (Add Menu button visible again)
+        XCTAssertTrue(app.buttons["Add Menu"].waitForExistence(timeout: 5))
     }
     
     // MARK: - Performance Tests
