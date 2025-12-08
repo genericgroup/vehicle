@@ -93,31 +93,29 @@ struct VehicleApp: App {
 struct MigrationAwareContentView: View {
     @StateObject private var migrationCoordinator = MigrationCoordinator()
     
-    /// Cached result of migration check - computed once at init time
-    /// This avoids re-evaluating on every view body access
-    private let migrationRequired: Bool
+    /// Check if running UI tests - skip all migration UI
+    private var isUITesting: Bool {
+        ProcessInfo.processInfo.arguments.contains("--uitesting")
+    }
     
-    init() {
-        // Perform synchronous checks once at initialization
-        let isUITesting = ProcessInfo.processInfo.arguments.contains("--uitesting")
-        
-        if isUITesting {
-            // UI testing: skip all migration logic
-            migrationRequired = false
-        } else if SchemaVersionManager.isFirstLaunch {
-            // First launch: record version synchronously, no migration UI needed
+    /// Check if migration is needed (only evaluated when not UI testing)
+    private var needsMigrationUI: Bool {
+        if SchemaVersionManager.isFirstLaunch {
+            // First launch: record version, no migration needed
             SchemaVersionManager.handleFirstLaunchIfNeeded()
-            migrationRequired = false
-        } else {
-            // Check if actual migration is needed
-            migrationRequired = SchemaVersionManager.needsMigration
+            return false
         }
+        return SchemaVersionManager.needsMigration
     }
     
     var body: some View {
         Group {
-            if !migrationRequired || migrationCoordinator.migrationState == .completed {
-                // Fast path: go directly to ContentView
+            // UI Testing: always show ContentView directly
+            if isUITesting {
+                ContentView()
+            }
+            // Normal flow: check if migration is needed
+            else if !needsMigrationUI || migrationCoordinator.migrationState == .completed {
                 ContentView()
             } else if migrationCoordinator.migrationState == .failed {
                 MigrationErrorView(

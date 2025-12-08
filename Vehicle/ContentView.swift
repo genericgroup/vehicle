@@ -254,6 +254,7 @@ struct ContentView: View {
             Text("You need to add a vehicle before you can add events or ownership records.")
         }
         .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("MainContentView")
         .task {
             if !hasInitialized {
                 viewModel.setModelContext(modelContext)
