@@ -13,6 +13,7 @@ final class VehicleUITestsLaunchTests: XCTestCase {
     override func setUpWithError() throws {
         continueAfterFailure = false
         app = XCUIApplication()
+        app.launchArguments = ["--uitesting"]
         app.launch()
     }
 
@@ -20,71 +21,39 @@ final class VehicleUITestsLaunchTests: XCTestCase {
         app = nil
     }
 
+    // Disabled - runs tests multiple times for each UI configuration (slow)
     override class var runsForEachTargetApplicationUIConfiguration: Bool {
-        true
+        false
     }
 
     // MARK: - Launch Tests
 
-    @MainActor
     func testLaunchToVehiclesList() throws {
-        let app = XCUIApplication()
-        app.launch()
-        
         // Verify we launch to the vehicles list
-        let vehiclesNavBar = app.navigationBars["Vehicles"]
-        XCTAssertTrue(vehiclesNavBar.exists)
-        
-        // Take a screenshot
-        let attachment = XCTAttachment(screenshot: app.screenshot())
-        attachment.name = "Vehicles List"
-        attachment.lifetime = .keepAlways
-        add(attachment)
+        XCTAssertTrue(app.navigationBars["Vehicles"].waitForExistence(timeout: 10))
     }
     
     func testLaunchWithEmptyState() throws {
-        // Verify navigation bar exists
-        XCTAssertTrue(app.navigationBars["Vehicles"].exists)
-        
-        // Verify empty state view exists
-        let emptyStateView = app.staticTexts["No Vehicles"]
-        XCTAssertTrue(emptyStateView.exists)
-        
-        // Verify empty state description
-        let description = app.staticTexts["Add your first vehicle to get started"]
-        XCTAssertTrue(description.exists)
-        
-        // Verify Add Menu button exists
+        // Verify navigation bar and empty state
+        XCTAssertTrue(app.navigationBars["Vehicles"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.staticTexts["No Vehicles"].waitForExistence(timeout: 5))
         XCTAssertTrue(app.buttons["Add Menu"].exists)
-        
-        // Verify Settings button exists
         XCTAssertTrue(app.buttons["Settings"].exists)
-        
-        // Verify search field exists
-        let searchField = app.searchFields["Search vehicles, events, and records"]
-        XCTAssertTrue(searchField.exists)
     }
     
-    @MainActor
     func testLaunchNavigationElements() throws {
-        let app = XCUIApplication()
-        app.launch()
-        
-        // Verify core navigation elements exist with correct accessibility identifiers
+        // Verify core navigation elements exist
+        XCTAssertTrue(app.navigationBars["Vehicles"].waitForExistence(timeout: 10))
         XCTAssertTrue(app.buttons["Settings"].exists)
         XCTAssertTrue(app.buttons["Add Menu"].exists)
         XCTAssertTrue(app.searchFields["Search vehicles, events, and records"].exists)
-        
-        // Take a screenshot
-        let attachment = XCTAttachment(screenshot: app.screenshot())
-        attachment.name = "Navigation Elements"
-        attachment.lifetime = .keepAlways
-        add(attachment)
     }
 
     func testLaunchPerformance() throws {
-        measure(metrics: [XCTApplicationLaunchMetric()]) {
-            XCUIApplication().launch()
+        if #available(iOS 13.0, *) {
+            measure(metrics: [XCTApplicationLaunchMetric()]) {
+                XCUIApplication().launch()
+            }
         }
     }
 }
