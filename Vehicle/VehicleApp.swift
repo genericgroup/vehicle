@@ -27,51 +27,68 @@ struct VehicleApp: App {
     @UIApplicationDelegateAdaptor private var appDelegate: AppDelegate
     private let logger = AppLogger.shared
     private let modelContainer: ModelContainer
+    private let isUITesting: Bool
     
     init() {
-        logger.info("Initializing VehicleApp", category: .userInterface)
+        // Check for UI testing FIRST before any other initialization
+        isUITesting = ProcessInfo.processInfo.arguments.contains("--uitesting")
         
-        // Configure model container with migration plan
-        do {
-            let schema = Schema(versionedSchema: VehicleSchemaV1.self)
-            let configuration = ModelConfiguration(
-                schema: schema,
-                isStoredInMemoryOnly: ProcessInfo.processInfo.arguments.contains("--uitesting")
-            )
-            
-            modelContainer = try ModelContainer(
-                for: schema,
-                migrationPlan: VehicleMigrationPlan.self,
-                configurations: [configuration]
-            )
-            
-            logger.info("Successfully configured ModelContainer with migration plan", category: .database)
-            logger.info("Current schema version: \(SchemaVersionManager.currentSchemaVersion)", category: .database)
-            
-            if let storedVersion = SchemaVersionManager.storedSchemaVersion {
-                logger.info("Stored schema version: \(storedVersion)", category: .database)
-            } else {
-                logger.info("No stored schema version - first launch", category: .database)
+        if isUITesting {
+            // UI Testing: Use simple in-memory container without migration plan
+            logger.info("UI Testing mode - using simple in-memory container", category: .userInterface)
+            do {
+                modelContainer = try ModelContainer(
+                    for: Vehicle.self,
+                    configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+                )
+            } catch {
+                fatalError("Failed to create UI testing container: \(error)")
             }
-        } catch {
-            logger.critical("Failed to configure ModelContainer: \(error.localizedDescription)", category: .database)
+        } else {
+            // Normal mode: Full initialization with migration plan
+            logger.info("Initializing VehicleApp", category: .userInterface)
             
-            // Log additional error details
-            let nsError = error as NSError
-            logger.error("Error domain: \(nsError.domain)", category: .database)
-            logger.error("Error code: \(nsError.code)", category: .database)
-            if let underlyingError = nsError.userInfo[NSUnderlyingErrorKey] as? Error {
-                logger.error("Underlying error: \(underlyingError)", category: .database)
+            do {
+                let schema = Schema(versionedSchema: VehicleSchemaV1.self)
+                let configuration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
+                
+                modelContainer = try ModelContainer(
+                    for: schema,
+                    migrationPlan: VehicleMigrationPlan.self,
+                    configurations: [configuration]
+                )
+                
+                logger.info("Successfully configured ModelContainer with migration plan", category: .database)
+                logger.info("Current schema version: \(SchemaVersionManager.currentSchemaVersion)", category: .database)
+                
+                if let storedVersion = SchemaVersionManager.storedSchemaVersion {
+                    logger.info("Stored schema version: \(storedVersion)", category: .database)
+                } else {
+                    logger.info("No stored schema version - first launch", category: .database)
+                }
+            } catch {
+                logger.critical("Failed to configure ModelContainer: \(error.localizedDescription)", category: .database)
+                
+                let nsError = error as NSError
+                logger.error("Error domain: \(nsError.domain)", category: .database)
+                logger.error("Error code: \(nsError.code)", category: .database)
+                if let underlyingError = nsError.userInfo[NSUnderlyingErrorKey] as? Error {
+                    logger.error("Underlying error: \(underlyingError)", category: .database)
+                }
+                
+                fatalError("Failed to initialize ModelContainer: \(error.localizedDescription)")
             }
-            
-            // Create a fallback in-memory container
-            fatalError("Failed to initialize ModelContainer: \(error.localizedDescription)")
         }
     }
     
     var body: some Scene {
         WindowGroup {
-            MigrationAwareContentView()
+            // UI Testing: Skip migration view entirely
+            if isUITesting {
+                ContentView()
+            } else {
+                MigrationAwareContentView()
+            }
         }
         .windowResizability(.automatic)
         .defaultSize(width: 1000, height: 700)
