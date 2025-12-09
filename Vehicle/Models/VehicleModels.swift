@@ -761,9 +761,9 @@ final class Vehicle {
     func calculateMaintenanceCosts(from: Date? = nil, to: Date? = nil) -> Decimal {
         guard let events = events else { return 0 }
         
-        // Filter events by type
+        // Filter events by type - compare by id for efficiency and clarity
         let maintenanceEvents = events.filter { event in
-            event.category == .repair || event.category == .maintenance
+            event.categoryId == EventCategory.repair.id || event.categoryId == EventCategory.maintenance.id
         }
         
         // Filter by date range

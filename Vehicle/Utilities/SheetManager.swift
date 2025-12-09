@@ -38,28 +38,21 @@ final class SheetManager: ObservableObject {
     }
     
     func presentSheet(_ sheet: Sheet) {
-        guard !isProcessing else {
-            logger.debug("Ignoring sheet presentation - already processing", category: .userInterface)
+        // Simple synchronous guard - no race condition possible since we're @MainActor
+        guard !isProcessing && activeSheet == nil else {
+            logger.debug("Ignoring sheet presentation - already processing or sheet active", category: .userInterface)
             return
         }
         
-        logger.debug("Processing sheet presentation request: \(String(describing: sheet))", category: .userInterface)
+        logger.debug("Presenting sheet: \(String(describing: sheet))", category: .userInterface)
         isProcessing = true
+        activeSheet = sheet
         
-        // Ensure we're on the main thread and add a slight delay
+        // Reset processing flag after a delay to prevent rapid re-triggering
         Task { @MainActor in
-            try? await Task.sleep(for: .milliseconds(100))
-            
-            if activeSheet == nil {
-                logger.debug("Presenting sheet: \(String(describing: sheet))", category: .userInterface)
-                activeSheet = sheet
-            } else {
-                logger.debug("Cannot present sheet - another sheet is active", category: .userInterface)
-            }
-            
-            try? await Task.sleep(for: .milliseconds(500))
+            try? await Task.sleep(for: .milliseconds(300))
             isProcessing = false
-            logger.debug("Sheet presentation processing completed", category: .userInterface)
+            logger.debug("Sheet presentation cooldown completed", category: .userInterface)
         }
     }
     

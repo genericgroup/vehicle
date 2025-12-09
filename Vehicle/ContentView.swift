@@ -44,10 +44,17 @@ struct ContentView: View {
             return _cachedSortedVehicles
         }
         
+        // Cache miss - compute fresh results
+        // Note: We can't update @State from a computed property, so the cache
+        // will be updated on next call to clearCaches() or when vehicles change
+        return computeSortedVehicles()
+    }
+    
+    /// Compute sorted vehicles - the actual sorting logic
+    private func computeSortedVehicles() -> [Vehicle] {
         let option = VehicleSortOption(rawValue: sortOption) ?? .none
         
-        // Calculate new sorted results
-        let sorted = vehicles.sorted { v1, v2 in
+        return vehicles.sorted { v1, v2 in
             if v1.isPinned != v2.isPinned {
                 return v1.isPinned
             }
@@ -73,17 +80,14 @@ struct ContentView: View {
                 return v1.category.displayName.localizedCaseInsensitiveCompare(v2.category.displayName) == .orderedAscending
             }
         }
-        
-        return sorted
     }
     
-    /// Update the sort cache - call this from onChange handlers
-    private func updateSortCache() {
+    /// Refresh the sort cache with current data
+    private func refreshSortCache() {
         let cacheKey = currentSortCacheKey
-        if _sortCacheKey != cacheKey {
-            _sortCacheKey = cacheKey
-            _cachedSortedVehicles = sortedVehicles
-        }
+        let sorted = computeSortedVehicles()
+        _sortCacheKey = cacheKey
+        _cachedSortedVehicles = sorted
     }
     
     private func clearCaches() {
@@ -265,14 +269,17 @@ struct ContentView: View {
             Task { @MainActor in
                 viewModel.updateVehiclesState(hasVehicles: !newVehicles.isEmpty)
                 clearCaches()
+                refreshSortCache()
             }
         }
         .onChange(of: sortOption) { _, _ in
             clearCaches()
+            refreshSortCache()
         }
         .onReceive(NotificationCenter.default.publisher(for: UIApplication.didReceiveMemoryWarningNotification)) { _ in
             Task { @MainActor in
                 clearCaches()
+                // Don't refresh cache on memory warning - let it be lazy-loaded
                 logger.info("Cleared caches due to memory warning", category: .general)
             }
         }

@@ -390,13 +390,15 @@ struct AttachmentsSheet: View {
             .alert("Delete Attachment?", isPresented: $showingDeleteConfirmation) {
                 Button("Cancel", role: .cancel) {
                     HapticManager.standardButtonTap()
+                    attachmentsToDelete = []
                 }
                 Button("Delete", role: .destructive) {
                     HapticManager.standardDelete()
-                    deleteSelectedAttachment()
+                    deleteAttachments(attachmentsToDelete)
+                    attachmentsToDelete = []
                 }
             } message: {
-                Text("Are you sure you want to delete this attachment? This action cannot be undone.")
+                Text("Are you sure you want to delete \(attachmentsToDelete.count == 1 ? "this attachment" : "these attachments")? This action cannot be undone.")
             }
         }
     }

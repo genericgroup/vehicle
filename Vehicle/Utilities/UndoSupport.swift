@@ -18,6 +18,14 @@ class UndoCoordinator: ObservableObject {
     
     private init() {}
     
+    deinit {
+        // Ensure timer is invalidated if coordinator is ever deallocated
+        // Note: This is a singleton so deinit won't normally be called,
+        // but included for correctness and if the pattern changes
+        undoTimer?.invalidate()
+        undoTimer = nil
+    }
+    
     /// Store vehicle data before deletion for potential undo
     func prepareVehicleForDeletion(_ vehicle: Vehicle) -> VehicleSnapshot {
         let snapshot = VehicleSnapshot(from: vehicle)

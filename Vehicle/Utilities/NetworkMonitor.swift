@@ -4,11 +4,12 @@ import CloudKit
 import SwiftUI
 
 @Observable
+@MainActor
 final class NetworkMonitor {
     static let shared = NetworkMonitor()
     private let logger = AppLogger.shared
-    private let monitor = NWPathMonitor()
-    private let queue = DispatchQueue(label: "NetworkMonitor")
+    private nonisolated let monitor = NWPathMonitor()
+    private nonisolated let queue = DispatchQueue(label: "NetworkMonitor")
     
     var isConnected = false
     var connectionType = NWInterface.InterfaceType.other
@@ -23,13 +24,16 @@ final class NetworkMonitor {
         setupCloudKitNotifications()
     }
     
-    private func setupNetworkMonitoring() {
+    private nonisolated func setupNetworkMonitoring() {
         monitor.pathUpdateHandler = { [weak self] path in
             guard let self = self else { return }
             
-            DispatchQueue.main.async {
-                self.isConnected = path.status == .satisfied
-                self.connectionType = path.availableInterfaces.first?.type ?? .other
+            let isConnected = path.status == .satisfied
+            let connectionType = path.availableInterfaces.first?.type ?? .other
+            
+            Task { @MainActor in
+                self.isConnected = isConnected
+                self.connectionType = connectionType
                 
                 // Log network status changes
                 self.logger.info(
@@ -46,7 +50,7 @@ final class NetworkMonitor {
         monitor.start(queue: queue)
     }
     
-    private func setupCloudKitNotifications() {
+    private nonisolated func setupCloudKitNotifications() {
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(handleCloudKitNotification(_:)),
@@ -55,36 +59,33 @@ final class NetworkMonitor {
         )
     }
     
-    @objc private func handleCloudKitNotification(_ notification: Notification) {
-        checkCloudKitAvailability()
+    @objc private nonisolated func handleCloudKitNotification(_ notification: Notification) {
+        Task { @MainActor in
+            await self.checkCloudKitAvailability()
+        }
     }
     
-    func checkCloudKitAvailability() {
-        CKContainer.default().accountStatus { [weak self] status, error in
-            guard let self = self else { return }
+    func checkCloudKitAvailability() async {
+        do {
+            let status = try await CKContainer.default().accountStatus()
+            let wasAvailable = isCloudKitAvailable
+            isCloudKitAvailable = status == .available
             
-            DispatchQueue.main.async {
-                let wasAvailable = self.isCloudKitAvailable
-                self.isCloudKitAvailable = status == .available
-                
-                if wasAvailable != self.isCloudKitAvailable {
-                    self.logger.info(
-                        "CloudKit availability changed: \(self.isCloudKitAvailable)",
-                        category: .state
-                    )
-                }
-                
-                if let error = error {
-                    self.logger.error(
-                        "CloudKit status check failed: \(error.localizedDescription)",
-                        category: .database
-                    )
-                }
-                
-                if self.isCloudKitAvailable {
-                    self.checkPendingSyncs()
-                }
+            if wasAvailable != isCloudKitAvailable {
+                logger.info(
+                    "CloudKit availability changed: \(isCloudKitAvailable)",
+                    category: .state
+                )
             }
+            
+            if isCloudKitAvailable {
+                checkPendingSyncs()
+            }
+        } catch {
+            logger.error(
+                "CloudKit status check failed: \(error.localizedDescription)",
+                category: .database
+            )
         }
     }
     

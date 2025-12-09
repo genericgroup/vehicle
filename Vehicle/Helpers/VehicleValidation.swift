@@ -63,8 +63,11 @@ struct VehicleValidation {
                 return .invalid("Modern VIN (1981+) cannot contain the letters I, O, or Q as they can be confused with numbers 1 and 0")
             }
             
-            // Check for valid characters
-            let invalidChars = vin.filter { !validCharacters.contains(UnicodeScalar(String($0))!) }
+            // Check for valid characters - safely handle Unicode conversion
+            let invalidChars = vin.filter { char in
+                guard let scalar = UnicodeScalar(String(char)) else { return true }
+                return !validCharacters.contains(scalar)
+            }
             if !invalidChars.isEmpty {
                 return .invalid("Modern VIN (1981+) contains invalid characters: \(invalidChars). Only letters (except I,O,Q) and numbers are allowed")
             }
@@ -77,8 +80,11 @@ struct VehicleValidation {
                 return .invalid("VIN cannot exceed 50 characters")
             }
             
-            // Check for valid characters
-            let invalidChars = vin.filter { !validCharacters.contains(UnicodeScalar(String($0))!) }
+            // Check for valid characters - safely handle Unicode conversion
+            let invalidChars = vin.filter { char in
+                guard let scalar = UnicodeScalar(String(char)) else { return true }
+                return !validCharacters.contains(scalar)
+            }
             if !invalidChars.isEmpty {
                 return .invalid("VIN contains invalid characters: \(invalidChars). Only letters and numbers are allowed")
             }
@@ -103,8 +109,11 @@ struct VehicleValidation {
             return .invalid("Serial number cannot exceed 50 characters (currently \(serialNumber.count) characters)")
         }
         
-        // Check for valid characters
-        let invalidChars = serialNumber.filter { !validCharacters.contains(UnicodeScalar(String($0))!) }
+        // Check for valid characters - safely handle Unicode conversion
+        let invalidChars = serialNumber.filter { char in
+            guard let scalar = UnicodeScalar(String(char)) else { return true }
+            return !validCharacters.contains(scalar)
+        }
         if !invalidChars.isEmpty {
             return .invalid("Serial number contains invalid characters: \(invalidChars). Only letters, numbers, and - _ / are allowed")
         }

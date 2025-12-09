@@ -52,18 +52,19 @@ class PDFGenerator {
                                         withAttributes: [.font: headerFont])
                 yPosition += 24.0
                 
-                let details = [
-                    "Make": vehicle.make,
-                    "Model": vehicle.model,
-                    "Year": "\(vehicle.year)",
-                    "Color": vehicle.color,
-                    "Category": getMostSpecificCategory(vehicle),
-                    "VIN": vehicle.vin ?? "Not specified",
-                    "Serial Number": vehicle.serialNumber ?? "Not specified",
-                    "Fuel Type": vehicle.fuelType.displayName,
-                    "Engine Type": vehicle.engineType.displayName,
-                    "Drive Type": vehicle.driveType.displayName,
-                    "Transmission": vehicle.transmissionType.displayName
+                // Use array of tuples to maintain consistent field order
+                let details: [(String, String)] = [
+                    ("Make", vehicle.make),
+                    ("Model", vehicle.model),
+                    ("Year", "\(vehicle.year)"),
+                    ("Color", vehicle.color),
+                    ("Category", getMostSpecificCategory(vehicle)),
+                    ("VIN", vehicle.vin ?? "Not specified"),
+                    ("Serial Number", vehicle.serialNumber ?? "Not specified"),
+                    ("Fuel Type", vehicle.fuelType.displayName),
+                    ("Engine Type", vehicle.engineType.displayName),
+                    ("Drive Type", vehicle.driveType.displayName),
+                    ("Transmission", vehicle.transmissionType.displayName)
                 ]
                 
                 for (key, value) in details {
