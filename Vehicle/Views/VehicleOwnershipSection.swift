@@ -48,22 +48,18 @@ struct VehicleOwnershipSection: View {
                 .onDelete { indexSet in
                     guard let index = indexSet.first,
                           let record = records[safe: index] else { return }
-                    Task { @MainActor in
-                        if reduceMotion {
+                    if reduceMotion {
+                        vehicle.ownershipRecords?.removeAll { $0.id == record.id }
+                    } else {
+                        withAnimation {
                             vehicle.ownershipRecords?.removeAll { $0.id == record.id }
-                        } else {
-                            withAnimation {
-                                vehicle.ownershipRecords?.removeAll { $0.id == record.id }
-                            }
                         }
                     }
                 }
                 
                 if !showingAllRecords && (sortedRecords?.count ?? 0) > displayLimit {
                     Button(action: {
-                        Task { @MainActor in
-                            toggleShowAllRecords()
-                        }
+                        toggleShowAllRecords()
                     }) {
                         Text("Show All \(totalRecords) Records")
                             .font(.subheadline)
@@ -86,14 +82,12 @@ struct VehicleOwnershipSection: View {
             }
         }
         .onChange(of: vehicle.ownershipRecords?.count) { _, _ in
-            Task { @MainActor in
-                if vehicle.ownershipRecords?.isEmpty == true {
-                    if reduceMotion {
+            if vehicle.ownershipRecords?.isEmpty == true {
+                if reduceMotion {
+                    showingAllRecords = false
+                } else {
+                    withAnimation {
                         showingAllRecords = false
-                    } else {
-                        withAnimation {
-                            showingAllRecords = false
-                        }
                     }
                 }
             }

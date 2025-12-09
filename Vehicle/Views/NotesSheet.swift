@@ -38,20 +38,13 @@ struct NotesSheet: View {
             TextEditor(text: $localNotes)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .padding()
-                .onChange(of: localNotes) { _, newValue in
-                    // Auto-save when text changes
-                    do {
-                        try modelContext.save()
-                        logger.debug("Auto-saved notes", category: .database)
-                    } catch {
-                        logger.error("Failed to auto-save notes: \(error.localizedDescription)", category: .database)
-                    }
-                }
                 .navigationTitle("Notes")
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
                     ToolbarItem(placement: .cancellationAction) {
                         Button("Cancel") {
+                            // Discard changes - localNotes is not saved to binding
+                            HapticManager.standardButtonTap()
                             dismiss()
                         }
                     }

@@ -48,22 +48,18 @@ struct VehicleEventsSection: View {
                 .onDelete { indexSet in
                     guard let index = indexSet.first,
                           let event = events[safe: index] else { return }
-                    Task { @MainActor in
-                        if reduceMotion {
+                    if reduceMotion {
+                        vehicle.events?.removeAll { $0.id == event.id }
+                    } else {
+                        withAnimation {
                             vehicle.events?.removeAll { $0.id == event.id }
-                        } else {
-                            withAnimation {
-                                vehicle.events?.removeAll { $0.id == event.id }
-                            }
                         }
                     }
                 }
                 
                 if !showingAllEvents && (sortedEvents?.count ?? 0) > displayLimit {
                     Button(action: {
-                        Task { @MainActor in
-                            toggleShowAllEvents()
-                        }
+                        toggleShowAllEvents()
                     }) {
                         Text("Show All \(totalEvents) Events")
                             .font(.subheadline)
@@ -86,14 +82,12 @@ struct VehicleEventsSection: View {
             }
         }
         .onChange(of: vehicle.events?.count) { _, _ in
-            Task { @MainActor in
-                if vehicle.events?.isEmpty == true {
-                    if reduceMotion {
+            if vehicle.events?.isEmpty == true {
+                if reduceMotion {
+                    showingAllEvents = false
+                } else {
+                    withAnimation {
                         showingAllEvents = false
-                    } else {
-                        withAnimation {
-                            showingAllEvents = false
-                        }
                     }
                 }
             }

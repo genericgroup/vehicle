@@ -748,6 +748,8 @@ struct AudioPlayerView: View {
     @State private var player: AVAudioPlayer?
     @State private var isPlaying = false
     @State private var currentTime: TimeInterval = 0
+    
+    // Timer that only publishes when view is active
     private let timer = Timer.publish(every: 0.1, on: .main, in: .common).autoconnect()
     
     var body: some View {
@@ -792,7 +794,13 @@ struct AudioPlayerView: View {
                 AppLogger.shared.error("Failed to create audio player: \(error.localizedDescription)", category: .general)
             }
         }
+        .onDisappear {
+            // Stop playback when view disappears
+            player?.stop()
+            player = nil
+        }
         .onReceive(timer) { _ in
+            // Only update when playing
             guard let player = player, isPlaying else { return }
             currentTime = player.currentTime
             if !player.isPlaying {
