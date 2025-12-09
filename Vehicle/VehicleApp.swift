@@ -22,18 +22,24 @@ enum QuickAction: String {
     case addOwnership = "AddOwnership"
 }
 
+/// Global flag for UI testing - checked once at app launch
+private let isUITestingMode: Bool = {
+    let result = ProcessInfo.processInfo.arguments.contains("--uitesting") ||
+                 ProcessInfo.processInfo.environment["UITESTING"] == "1"
+    if result {
+        print("[UITEST] UI Testing mode detected")
+    }
+    return result
+}()
+
 @main
 struct VehicleApp: App {
     @UIApplicationDelegateAdaptor private var appDelegate: AppDelegate
     private let logger = AppLogger.shared
     private let modelContainer: ModelContainer
-    private let isUITesting: Bool
     
     init() {
-        // Check for UI testing FIRST before any other initialization
-        isUITesting = ProcessInfo.processInfo.arguments.contains("--uitesting")
-        
-        if isUITesting {
+        if isUITestingMode {
             // UI Testing: Use simple in-memory container without migration plan
             logger.info("UI Testing mode - using simple in-memory container", category: .userInterface)
             do {
@@ -83,9 +89,12 @@ struct VehicleApp: App {
     
     var body: some Scene {
         WindowGroup {
-            // UI Testing: Skip migration view entirely
-            if isUITesting {
+            // UI Testing: Skip migration view entirely, go straight to ContentView
+            if isUITestingMode {
                 ContentView()
+                    .onAppear {
+                        print("[UITEST] ContentView appeared")
+                    }
             } else {
                 MigrationAwareContentView()
             }
