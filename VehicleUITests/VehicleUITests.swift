@@ -108,8 +108,11 @@ final class VehicleUITests: XCTestCase {
     // MARK: - Performance Tests
     
     func testLaunchPerformance() throws {
+        // Use the same app configuration as other tests
         measure(metrics: [XCTApplicationLaunchMetric()]) {
-            XCUIApplication().launch()
+            let testApp = XCUIApplication()
+            testApp.launchArguments = ["--uitesting"]
+            testApp.launch()
         }
     }
 }
